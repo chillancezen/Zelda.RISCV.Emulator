@@ -1,6 +1,8 @@
 #include <stdint.h>
 
 
+char * welcome = "Hello World\n";
+
 void
 kernel_init(void)
 {

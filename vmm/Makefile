@@ -31,3 +31,6 @@ clean:
 	@rm -f *.o $(GUEST_ELF) $(GUEST_IMG) $(GUEST_MAP)
 run:$(GUEST_ELF)
 	@./vmm64 ../guest/guest.rv32.img
+
+debug:$(GUEST_ELF)
+	@gdb ./vmm64 ../guest/guest.rv32.img

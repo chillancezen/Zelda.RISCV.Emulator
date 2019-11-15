@@ -5,7 +5,7 @@
 #define _HART_H
 
 #include <stdint.h>
-
+#include <assert.h>
 
 #define XLEN 32
 
@@ -15,7 +15,6 @@
 #define REGISTER_TYPE uint64_t
 #endif
 
-#define DEFAULT_TRANSLATION_CACHE_SIZE (4096 * 1)
 
 struct integer_register_profile {
     REGISTER_TYPE zero;
@@ -34,18 +33,58 @@ struct integer_register_profile {
 
 struct virtual_machine;
 
+struct program_counter_mapping_item {
+    uint32_t guest_pc;
+    uint32_t tc_offset;
+}__attribute__((packed));
+
+#define TRANSLATION_CACHE_SIZE (4096 * 1)
+#define MAX_INSTRUCTIONS_TOTRANSLATE 256
+// reserve a small trunk of space to transfer control to vmm
+#define RESERVED_CACHE_LENGTH 32
+
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
     int hart_id;
     uint32_t pc;
     struct virtual_machine * vmptr;
 
+    int nr_translated_instructions;
+    void * pc_mappings;
+
     void * translation_cache;
-    int translation_cache_size;
+    int translation_cache_ptr;
 }__attribute__((aligned(64)));
 
 
+static inline int
+unoccupied_cache_size(struct hart * hart_instance)
+{
+    int ret = 0;
+    if (hart_instance->nr_translated_instructions <
+        MAX_INSTRUCTIONS_TOTRANSLATE) {
+        ret = TRANSLATION_CACHE_SIZE - hart_instance->translation_cache_ptr -
+              RESERVED_CACHE_LENGTH;
+    }
+    assert(ret >= 0);
+    return ret;
+}
 
 void
 hart_init(struct hart * hart_instance, int hart_id);
+
+void
+flush_translation_cache(struct hart * hart_instance);
+
+
+int
+add_translation_item(struct hart * hart_instance,
+                     uint32_t guest_instruction_address,
+                     const void * translation_instruction_block,
+                     int instruction_block_length);
+
+struct program_counter_mapping_item *
+search_translation_item(struct hart * hart_instance,
+                        uint32_t guest_instruction_address);
+
 #endif

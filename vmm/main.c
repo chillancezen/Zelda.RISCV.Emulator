@@ -25,7 +25,6 @@ int main(int argc, char ** argv)
     virtual_machine_init(&vm0, &spec);
 
     vmresume(hart_by_id(&vm0, 0));
-    
     __asm__ volatile(".byte 0xcc;");
     return 0;
 }

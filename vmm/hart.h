@@ -45,8 +45,8 @@ struct program_counter_mapping_item {
 
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
+    REGISTER_TYPE pc;
     int hart_id;
-    uint32_t pc;
     struct virtual_machine * vmptr;
 
     int nr_translated_instructions;
@@ -56,6 +56,19 @@ struct hart {
     int translation_cache_ptr;
 }__attribute__((aligned(64)));
 
+struct prefetch_blob {
+    // The guest address of instruction to fetch and translate in the next round
+    uint32_t next_instruction_to_fetch;
+    // indicating whether to stop fetch, there are several reasons to stop:
+    // 1. translation cache is full
+    // 2. encounter a jump/branch instruction which is considered as a terminator
+    //    of a translation unit.
+    // 3. the target instruction is already in the translation cache
+    uint8_t is_to_stop;
+
+    // The pointer of current hart.
+    void * opaque;
+};
 
 static inline int
 unoccupied_cache_size(struct hart * hart_instance)

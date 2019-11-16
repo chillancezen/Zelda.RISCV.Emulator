@@ -23,6 +23,7 @@ enum INSTRUCTION_ENCODING_TYPE {
     ENCODING_TYPE_UNKNOWN = 0,
     ENCODING_TYPE_U = 1,
     ENCODING_TYPE_I,
+    ENCODING_TYPE_J,
 };
 
 struct decoding {
@@ -93,7 +94,7 @@ __asm__ volatile (#indicator  "_translation_end:\n")
 
 
 #define BEGIN_PARAM_SCHEMA()                                                   \
-__asm__ volatile(".align 1;"                                                   \
+__asm__ volatile(".align 4;"                                                   \
                  "11:"
 
 #define PARAM32()                                                              \
@@ -141,5 +142,7 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
     (int)(translation_end_addr - translation_begin_addr);                      \
 })
 
+#define PROCEED_TO_NEXT_INSTRUCTION()                                          \
+    "addl $4, (%%r14);"
 
 #endif

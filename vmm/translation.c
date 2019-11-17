@@ -18,7 +18,8 @@ static instruction_translator translators[128];
  * are preserved for special purposes.
  *  r15: the address of the hart's registers group
  *  r14: the address of the hart's pc register
- *  r13: the address of the hart's translation cache base
+ *  r13: the value of the hart's translation cache base
+ *  r12: the hartptr.
  */
 
 
@@ -59,10 +60,7 @@ riscv_lui_translator(struct prefetch_blob * blob, uint32_t instruction)
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
 
-    if (TRANSLATION_SIZE(lui_instruction) > unoccupied_cache_size(hartptr)) {
-        blob->is_to_stop = 1;
-        return;
-    }
+    PRECHECK_TRANSLATION_CACHE(lui_instruction, blob);
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_U);
 
     BEGIN_TRANSLATION(lui_instruction);
@@ -101,10 +99,8 @@ riscv_auipc_translator(struct prefetch_blob * blob, uint32_t instruction)
     uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
-    if (TRANSLATION_SIZE(auipc_instruction) > unoccupied_cache_size(hartptr)) {
-        blob->is_to_stop = 1;
-        return;
-    }
+
+    PRECHECK_TRANSLATION_CACHE(auipc_instruction, blob);
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_U);
 
     BEGIN_TRANSLATION(auipc_instruction);
@@ -150,6 +146,7 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
         search_translation_item(hartptr, jump_target);
 
     if (found_mapping) {
+        PRECHECK_TRANSLATION_CACHE(jal_instruction_with_target, blob);
         BEGIN_TRANSLATION(jal_instruction_with_target);
         __asm__ volatile("movl "PIC_PARAM(0)", %%edx;"
                          "shl $2, %%edx;"
@@ -181,6 +178,7 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
         COMMIT_TRANSLATION(jal_instruction_with_target, hartptr,
                            instruction_linear_address);
     } else {
+        PRECHECK_TRANSLATION_CACHE(jal_instruction_without_target, blob);
         BEGIN_TRANSLATION(jal_instruction_without_target);
         __asm__ volatile("movl "PIC_PARAM(0)", %%edx;"
                          "shl $2, %%edx;"
@@ -225,18 +223,40 @@ prefetch_one_instruction(struct prefetch_blob * blob)
     per_category_translator(blob, instruction);
 }
 
+extern void * vmm_jumper_begin;
+extern void * vmm_jumper_end;
 void
 prefetch_instructions(struct hart * hartptr)
 {
     struct prefetch_blob blob = {
         .next_instruction_to_fetch = hartptr->pc,
         .is_to_stop = 0,
+        .is_flushable = 1,
         .opaque = hartptr
     };
+    int old_trans_ptr = hartptr->translation_cache_ptr;
     while (1) {
+        // See whether the instruction has already been in the translation cache
+        // stop translation if so.
+        if (search_translation_item(hartptr, blob.next_instruction_to_fetch)) {
+            break;
+        }
         prefetch_one_instruction(&blob);
         if (blob.is_to_stop) {
             break;
+        }
+    }
+    int new_trans_ptr = hartptr->translation_cache_ptr;
+    if (old_trans_ptr != new_trans_ptr) {
+        // translation cache updated, append the jumper which directs control
+        // to vmm
+        uint8_t * jumper_code_begin = (uint8_t *)&vmm_jumper_begin;
+        uint8_t * jumper_code_end = (uint8_t *)&vmm_jumper_end;
+        int index = 0;
+        for (; jumper_code_begin < jumper_code_end;
+             jumper_code_begin++, index++) {
+            *(uint8_t *)(index + hartptr->translation_cache_ptr +
+                         hartptr->translation_cache) = *jumper_code_begin;
         }
     }
 }
@@ -245,8 +265,34 @@ void
 vmresume(struct hart * hartptr)
 {
     prefetch_instructions(hartptr);
+    // transfer control to guest code by jumping into translation cache
+    struct program_counter_mapping_item * ti;
+    assert(ti = search_translation_item(hartptr, hartptr->pc));
+    __asm__ volatile("movq %%rax, %%r15;"
+                     "movq %%rbx, %%r14;"
+                     "movq %%rcx, %%r13;"
+                     "movq %%rdx, %%r12;"
+                     "jmpq *%%rdi;"
+                     :
+                     :"a"(&hartptr->registers), "b"(&hartptr->pc),
+                      "c"(hartptr->translation_cache),
+                      "d"(hartptr),
+                      "D"(hartptr->translation_cache + ti->tc_offset)
+                     :"memory");
 }
 
+void
+vmexit(struct hart * hartptr)
+{
+    //vmresume(hartptr);
+    dump_hart(hartptr);
+}
+
+void
+vmpanic(struct hart * hartptr)
+{
+    assert(0);
+}
 
 __attribute__((constructor)) void
 translation_init(void)

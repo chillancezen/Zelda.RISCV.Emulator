@@ -6,14 +6,21 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-
+#include <sys/mman.h>
+#include <errno.h>
 void
 hart_init(struct hart * hart_instance, int hart_id)
 {
     memset(hart_instance, 0x0, sizeof(struct hart));
     hart_instance->hart_id = hart_id;
-    hart_instance->translation_cache = 
-        aligned_alloc(4096, TRANSLATION_CACHE_SIZE);
+
+    // mprotect requires the memory is obtained by mmap, or its behavior is
+    // undefined.
+    uint64_t tc_base = (uint64_t)mmap(NULL, TRANSLATION_CACHE_SIZE + 4096,
+                                      PROT_READ | PROT_WRITE | PROT_EXEC,
+                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    tc_base &= ~4095;
+    hart_instance->translation_cache = (void *)tc_base;
     assert(hart_instance->translation_cache);
 
     hart_instance->pc_mappings =
@@ -21,6 +28,10 @@ hart_init(struct hart * hart_instance, int hart_id)
                             sizeof(struct program_counter_mapping_item));
     assert(hart_instance->pc_mappings);
     flush_translation_cache(hart_instance);
+
+    // grant exec privilege to the translation cache
+    assert(!mprotect(hart_instance->translation_cache, TRANSLATION_CACHE_SIZE,
+                     PROT_EXEC | PROT_READ | PROT_WRITE));
 }
 
 
@@ -82,3 +93,26 @@ search_translation_item(struct hart * hart_instance,
                    comparing_mapping_item);
 }
 
+void
+dump_hart(struct hart * hartptr)
+{
+    const char * regs_abi_names[] = {
+        "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+        "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+        "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+        "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+    };
+    printf("dump hart:%p\n", hartptr);
+    printf("\thart-id: %d\n", hartptr->hart_id);
+    printf("\tpc: 0x%x\n", hartptr->pc);
+    int index = 0;
+    uint32_t * regs = (uint32_t *)&hartptr->registers;
+    for (index = 0; index < 32; index++) {
+        printf("\t");
+        printf("X%02d(%-4s): 0x%08x  ", index, regs_abi_names[index],
+               regs[index]);
+        if (((index + 1) % 4) == 0) {
+            printf("\n");
+        }
+    }
+}

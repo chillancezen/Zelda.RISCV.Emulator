@@ -65,7 +65,7 @@ struct prefetch_blob {
     //    of a translation unit.
     // 3. the target instruction is already in the translation cache
     uint8_t is_to_stop;
-
+    uint8_t is_flushable;
     // The pointer of current hart.
     void * opaque;
 };
@@ -99,5 +99,8 @@ add_translation_item(struct hart * hart_instance,
 struct program_counter_mapping_item *
 search_translation_item(struct hart * hart_instance,
                         uint32_t guest_instruction_address);
+
+void
+dump_hart(struct hart * hartptr);
 
 #endif

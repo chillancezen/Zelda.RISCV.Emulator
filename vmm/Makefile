@@ -6,8 +6,8 @@ AS_FILES = $(foreach item, .,$(wildcard $(item)/*.S))
 AS_OBJS = $(patsubst %.S,%.o,$(AS_FILES))
 
 
-# Use c11. . .
-CCPARAMS = -m64 -std=c11 -O0 -g3 -Werror -Wall -Wstrict-prototypes
+# Use gnu11. . .
+CCPARAMS = -m64 -std=gnu11 -O0 -g3 -Werror -Wall -Wstrict-prototypes
 
 
 GUEST_ELF = vmm64

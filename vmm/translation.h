@@ -79,9 +79,8 @@ __asm__ volatile (#indicator  "_translation_end:\n")
         *(__index + ((uint32_t *)__ptr)) = indicator##_params[__index];        \
     }                                                                          \
     __ptr = hart_instance->translation_cache + __item->tc_offset;              \
-    TRANS_DEBUG("%s at 0x%x {len:%d, tc:0x%x}: ", #indicator,                  \
-                instruction_linear_addr, __instruction_block_len,              \
-                (unsigned int)(uint64_t)__ptr);                                \
+    TRANS_DEBUG("%s at 0x%x {len:%d, tc:%p}: ", #indicator,                    \
+                instruction_linear_addr, __instruction_block_len, __ptr);      \
     for (__index = 0; __index < __instruction_block_len; __index++) {          \
         TRANS_DEBUG("%02x ", ((uint8_t *)__ptr)[__index]);                     \
     }                                                                          \
@@ -144,5 +143,17 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 
 #define PROCEED_TO_NEXT_INSTRUCTION()                                          \
     "addl $4, (%%r14);"
+
+
+#define PRECHECK_TRANSLATION_CACHE(indicator, blob)                            \
+    if (TRANSLATION_SIZE(indicator) > unoccupied_cache_size((blob)->opaque)) { \
+        if (blob->is_flushable) {                                              \
+            flush_translation_cache((blob)->opaque);                           \
+            blob->is_flushable = 0;                                            \
+        } else {                                                               \
+            blob->is_to_stop = 1;                                              \
+            return;                                                            \
+        }                                                                      \
+    }
 
 #endif

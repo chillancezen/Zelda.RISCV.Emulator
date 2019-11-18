@@ -23,13 +23,16 @@ enum INSTRUCTION_ENCODING_TYPE {
     ENCODING_TYPE_UNKNOWN = 0,
     ENCODING_TYPE_U = 1,
     ENCODING_TYPE_I,
-    ENCODING_TYPE_J,
+    ENCODING_TYPE_UJ,
 };
 
 struct decoding {
     enum INSTRUCTION_ENCODING_TYPE instr_encoding_type;
     uint8_t opcode;
+    uint8_t funct3;
     uint8_t rd_index;
+    uint8_t rs1_index;
+    uint8_t rs2_index;
     uint32_t imm;
 };
 
@@ -155,5 +158,20 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
             return;                                                            \
         }                                                                      \
     }
+
+
+
+
+
+typedef void (*instruction_translator)(struct prefetch_blob * blob, uint32_t);
+
+void
+riscv_arithmetic_immediate_instructions_translation_entry(struct prefetch_blob * blob,
+                                                          uint32_t instruction);
+
+void
+instruction_decoding_per_type(struct decoding * dec,
+                              uint32_t intrs,
+                              enum INSTRUCTION_ENCODING_TYPE encoding_type);
 
 #endif

@@ -9,13 +9,11 @@
 #include <util.h>
 
 
-//typedef int (*instruction_translator)(uint32_t, uint32_t, void *);
-typedef void (*instruction_translator)(struct prefetch_blob * blob, uint32_t);
 static instruction_translator translators[128];
 
 /*
- * XXX: before control is translated to guest cache code, the following registers
- * are preserved for special purposes.
+ * XXX: before control is transfered to guest cache code, the following registers
+ * are preserved to filled before switching for special purposes.
  *  r15: the address of the hart's registers group
  *  r14: the address of the hart's pc register
  *  r13: the value of the hart's translation cache base
@@ -23,7 +21,7 @@ static instruction_translator translators[128];
  */
 
 
-static void
+void
 instruction_decoding_per_type(struct decoding * dec, 
                               uint32_t intrs,
                               enum INSTRUCTION_ENCODING_TYPE encoding_type)
@@ -38,13 +36,20 @@ instruction_decoding_per_type(struct decoding * dec,
             // IMM 31:12
             dec->imm = (intrs >> 12) & 0xfffff;
             break;
-        case ENCODING_TYPE_J:
+        case ENCODING_TYPE_UJ:
             dec->rd_index = (intrs >> 7) & 0x1f;
             // IMM 20:1
             dec->imm = (intrs >> 21) & 0x3ff; // 10 bits
             dec->imm |= ((intrs >> 20) & 0x1) << 10; // 1 bit
             dec->imm |= ((intrs >> 12) & 0xff) << 11; // 8 bit
             dec->imm |= ((intrs >> 31) & 0x1) << 19; // 1 bit
+            break;
+        case ENCODING_TYPE_I:
+            dec->rd_index = (intrs >> 7) & 0x1f;
+            dec->funct3 = (intrs >> 12) & 7;
+            dec->rs1_index = (intrs >> 15) & 0x1f;
+            // IMM 11:0
+            dec->imm = (intrs >> 20) & 0xfff;  
             break;
         default:
             assert(0);
@@ -139,7 +144,7 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
     uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
-    instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_J);
+    instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_UJ);
     int jump_target = instruction_linear_address +
                       sign_extend32(dec.imm << 1, 20);
     struct program_counter_mapping_item * found_mapping =
@@ -284,8 +289,8 @@ vmresume(struct hart * hartptr)
 void
 vmexit(struct hart * hartptr)
 {
-    //vmresume(hartptr);
     dump_hart(hartptr);
+    vmresume(hartptr);
 }
 
 void
@@ -301,4 +306,5 @@ translation_init(void)
     translators[RISCV_OPCODE_LUI] = riscv_lui_translator;
     translators[RISCV_OPCODE_AUIPC] = riscv_auipc_translator;
     translators[RISCV_OPCODE_JAL] = riscv_jal_translator;
+    translators[RISCV_OPCODE_OP_IMM] = riscv_arithmetic_immediate_instructions_translation_entry;
 }

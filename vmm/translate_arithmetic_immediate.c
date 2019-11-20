@@ -133,6 +133,125 @@ riscv_stliu_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
+static void
+riscv_xori_translator(struct decoding * dec, struct prefetch_blob * blob,
+                      uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    int32_t signed_imm = sign_extend32(dec->imm, 11);
+    PRECHECK_TRANSLATION_CACHE(xori_instruction, blob);
+    BEGIN_TRANSLATION(xori_instruction);
+    __asm__ volatile("xor %%ecx, %%ecx;"
+                     "movl "PIC_PARAM(1)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl (%%rdx), %%eax;"
+                     "movl "PIC_PARAM(0)", %%edx;"
+                     "xorl %%edx, %%eax;"
+                     "movl "PIC_PARAM(2)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl %%eax, (%%rdx);"
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     END_INSTRUCTION(xori_instruction)
+                     :
+                     :
+                     :"memory", "%rax", "%rdx");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32() /*imm: signed*/
+            PARAM32() /*rs1 index*/
+            PARAM32() /*rd index*/
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(xori_instruction);
+        BEGIN_PARAM(xori_instruction)
+            signed_imm,
+            dec->rs1_index,
+            dec->rd_index
+        END_PARAM()
+    COMMIT_TRANSLATION(xori_instruction, hartptr, instruction_linear_address);
+    blob->next_instruction_to_fetch += 4;
+}
+
+static void
+riscv_ori_translator(struct decoding * dec, struct prefetch_blob * blob,
+                      uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    int32_t signed_imm = sign_extend32(dec->imm, 11);
+    PRECHECK_TRANSLATION_CACHE(ori_instruction, blob);
+    BEGIN_TRANSLATION(ori_instruction);
+    __asm__ volatile("xor %%ecx, %%ecx;"
+                     "movl "PIC_PARAM(1)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl (%%rdx), %%eax;"
+                     "movl "PIC_PARAM(0)", %%edx;"
+                     "orl %%edx, %%eax;"
+                     "movl "PIC_PARAM(2)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl %%eax, (%%rdx);"
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     END_INSTRUCTION(ori_instruction)
+                     :
+                     :
+                     :"memory", "%rax", "%rdx");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32() /*imm: signed*/
+            PARAM32() /*rs1 index*/
+            PARAM32() /*rd index*/
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(ori_instruction);
+        BEGIN_PARAM(ori_instruction)
+            signed_imm,
+            dec->rs1_index,
+            dec->rd_index
+        END_PARAM()
+    COMMIT_TRANSLATION(ori_instruction, hartptr, instruction_linear_address);
+    blob->next_instruction_to_fetch += 4;
+}
+
+static void
+riscv_andi_translator(struct decoding * dec, struct prefetch_blob * blob,
+                      uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    int32_t signed_imm = sign_extend32(dec->imm, 11);
+    PRECHECK_TRANSLATION_CACHE(andi_instruction, blob);
+    BEGIN_TRANSLATION(andi_instruction);
+    __asm__ volatile("xor %%ecx, %%ecx;"
+                     "movl "PIC_PARAM(1)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl (%%rdx), %%eax;"
+                     "movl "PIC_PARAM(0)", %%edx;"
+                     "andl %%edx, %%eax;"
+                     "movl "PIC_PARAM(2)", %%edx;"
+                     "shl $2, %%edx;"
+                     "addq %%r15, %%rdx;"
+                     "movl %%eax, (%%rdx);"
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     END_INSTRUCTION(andi_instruction)
+                     :
+                     :
+                     :"memory", "%rax", "%rdx");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32() /*imm: signed*/
+            PARAM32() /*rs1 index*/
+            PARAM32() /*rd index*/
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(andi_instruction);
+        BEGIN_PARAM(andi_instruction)
+            signed_imm,
+            dec->rs1_index,
+            dec->rd_index
+        END_PARAM()
+    COMMIT_TRANSLATION(andi_instruction, hartptr, instruction_linear_address);
+    blob->next_instruction_to_fetch += 4;
+}
 
 static arithmetic_immediate_instruction_translator per_funct3_handlers[8];
 
@@ -155,4 +274,7 @@ arithmetic_immediate_constructor(void)
     per_funct3_handlers[0x0] = riscv_addi_translator;
     per_funct3_handlers[0x2] = riscv_stli_translator;
     per_funct3_handlers[0x3] = riscv_stliu_translator;
+    per_funct3_handlers[0x4] = riscv_xori_translator;
+    per_funct3_handlers[0x6] = riscv_ori_translator;
+    per_funct3_handlers[0x7] = riscv_andi_translator;
 }

@@ -18,6 +18,10 @@ guest_kernel_entry:
     slti a5, a3, -221
     li a3, 0xffffff22
     sltiu a6, a3, -221
+    li a3, 0xbeefdead
+    xori a0, a3, 0xd
+    ori a1, a3, 0x50
+    andi a4, a3, 0xff
     jal ra, kernel_init
 
 

@@ -38,7 +38,8 @@ hart_init(struct hart * hart_instance, int hart_id)
 void
 flush_translation_cache(struct hart * hart_instance)
 {
-    hart_instance->nr_translated_instructions = 0; 
+    hart_instance->nr_translated_instructions = 0;
+    hart_instance->translation_cache_ptr = 0; 
 }
 
 static int

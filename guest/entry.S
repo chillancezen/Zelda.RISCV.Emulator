@@ -22,6 +22,9 @@ guest_kernel_entry:
     xori a0, a3, 0xd
     ori a1, a3, 0x50
     andi a4, a3, 0xff
+    slli a5, a3, 31
+    srli a6, a3, 28
+    srai a7, a3, 4
     jal ra, kernel_init
 
 

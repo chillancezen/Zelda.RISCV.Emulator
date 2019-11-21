@@ -15,3 +15,7 @@ The system level emulator for RISCV ISA
 - [x] xori
 - [x] ori
 - [x] andi
+- [x] slli
+- [x] srli
+- [x] srai
+

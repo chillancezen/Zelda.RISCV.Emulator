@@ -170,6 +170,12 @@ riscv_arithmetic_immediate_instructions_translation_entry(struct prefetch_blob *
                                                           uint32_t instruction);
 
 void
+riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction);
+
+void
+riscv_jalr_translator(struct prefetch_blob * blob, uint32_t instruction);
+
+void
 instruction_decoding_per_type(struct decoding * dec,
                               uint32_t intrs,
                               enum INSTRUCTION_ENCODING_TYPE encoding_type);

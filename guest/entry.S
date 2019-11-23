@@ -25,6 +25,10 @@ guest_kernel_entry:
     slli a5, a3, 31
     srli a6, a3, 28
     srai a7, a3, 4
+    jal test_procedure
     jal ra, kernel_init
 
+test_procedure:
+    addi sp, sp, -16
+    ret
 

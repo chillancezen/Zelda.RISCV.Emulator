@@ -24,7 +24,7 @@ int main(int argc, char ** argv)
     struct virtual_machine vm0;
     virtual_machine_init(&vm0, &spec);
 
-    vmresume(hart_by_id(&vm0, 0));
+    vmresume(hart_by_id(&vm0, 1));
     __asm__ volatile(".byte 0xcc;");
     return 0;
 }

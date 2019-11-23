@@ -29,3 +29,14 @@ vmm_jumper_end:
 
 
 
+
+.global translation_slow_path
+translation_slow_path:
+    pushq %r15
+    pushq %r14
+    pushq %r13
+    pushq %r12
+    pushq %r11
+    pushq %r10
+    pushq %r9
+    pushq %r8

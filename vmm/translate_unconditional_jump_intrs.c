@@ -29,9 +29,9 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
                          "movl "PIC_PARAM(2)", %%eax;"
                          "movl %%eax, (%%r14);"
                          "movl "PIC_PARAM(3)", %%edi;"
+                         RESET_ZERO_REGISTER()
                          "addq %%r13, %%rdi;"
                          "jmpq *%%rdi;"
-                         END_INSTRUCTION(jal_instruction_with_target)
                          :
                          :
                          :"memory", "%rax", "%rdx", "%rdi");
@@ -60,7 +60,10 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
                          "movl %%eax, (%%rdx);"
                          "movl "PIC_PARAM(2)", %%eax;"
                          "movl %%eax, (%%r14);"
-                         // FIXME: insert instructions to trap to VMM
+                         RESET_ZERO_REGISTER()
+                         // FIXED: insert instructions to trap to VMM
+                         "movq $vmm_entry_point, %%rax;"
+                         "jmpq *%%rax;"
                          END_INSTRUCTION(jal_instruction_without_target)
                          :
                          :
@@ -91,8 +94,8 @@ riscv_jalr_translator(struct prefetch_blob * blob, uint32_t instruction)
     uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
-    int32_t signed_offset = sign_extend32(dec.imm, 11);
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_I);
+    int32_t signed_offset = sign_extend32(dec.imm, 11);
     PRECHECK_TRANSLATION_CACHE(jalr_instruction, blob);
     BEGIN_TRANSLATION(jalr_instruction);
     __asm__ volatile("movl "PIC_PARAM(2)", %%edx;"
@@ -107,9 +110,9 @@ riscv_jalr_translator(struct prefetch_blob * blob, uint32_t instruction)
                      "movl "PIC_PARAM(1)", %%eax;"
                      "movl %%eax, (%%rdx);"
                      "movl %%ebx, (%%r14);" // Update the hart PC
-                     //"movq vmm_entry_point, %%rax;"
-                     //"jmpq *%%rax;"
-                     END_INSTRUCTION(jalr_instruction)
+                     RESET_ZERO_REGISTER()
+                     "movq $vmm_entry_point, %%rax;"
+                     "jmpq *%%rax;"
                      :
                      :
                      :"memory", "%eax", "%ebx", "%ecx", "%edx");

@@ -19,11 +19,14 @@ enum RISCV_OPCODE {
     RISCV_OPCODE_FENCE = 0x0f
 };
 
+// FIXME: This is really important, clear zero register for all the registers
+// which has a RD operand
 enum INSTRUCTION_ENCODING_TYPE {
     ENCODING_TYPE_UNKNOWN = 0,
     ENCODING_TYPE_U = 1,
     ENCODING_TYPE_I,
     ENCODING_TYPE_UJ,
+    ENCODING_TYPE_S
 };
 
 struct decoding {
@@ -53,6 +56,7 @@ __asm__ volatile (#indicator  "_translation_begin:\n")
 #define DEBUG_TRANSLATION
 
 #if defined(DEBUG_TRANSLATION)
+#include <stdio.h>
 #define TRANS_DEBUG(...) printf(__VA_ARGS__)
 #else
 #define TRANS_DEBUG(...) 
@@ -147,7 +151,12 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 #define PROCEED_TO_NEXT_INSTRUCTION()                                          \
     "addl $4, (%%r14);"
 
+#define RESET_ZERO_REGISTER()                                                  \
+    "movl $0x0, (%%r15);"
 
+
+// FIX: There is only one chance to flush the translation cache once
+// the translation procedure begins
 #define PRECHECK_TRANSLATION_CACHE(indicator, blob)                            \
     if (TRANSLATION_SIZE(indicator) > unoccupied_cache_size((blob)->opaque)) { \
         if (blob->is_flushable) {                                              \
@@ -157,6 +166,8 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
             blob->is_to_stop = 1;                                              \
             return;                                                            \
         }                                                                      \
+    } else {                                                                   \
+        blob->is_flushable = 0;                                                \
     }
 
 
@@ -164,6 +175,10 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 
 
 typedef void (*instruction_translator)(struct prefetch_blob * blob, uint32_t);
+
+typedef void (*instruction_sub_translator)(struct decoding * dec,
+                                           struct prefetch_blob * blob,
+                                           uint32_t);
 
 void
 riscv_arithmetic_immediate_instructions_translation_entry(struct prefetch_blob * blob,
@@ -180,4 +195,7 @@ instruction_decoding_per_type(struct decoding * dec,
                               uint32_t intrs,
                               enum INSTRUCTION_ENCODING_TYPE encoding_type);
 
+void
+riscv_memory_store_instructions_translation_entry(struct prefetch_blob * blob,
+                                                  uint32_t instruction);
 #endif

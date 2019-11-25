@@ -4,7 +4,7 @@
 #ifndef _MMU_H
 #define _MMU_H
 #include <vm.h>
-
+#include <hart.h>
 
 #define _(_size)                                                               \
 __attribute__((always_inline)) static inline uint##_size##_t                   \
@@ -48,8 +48,9 @@ _(64)
 
 #define _(_size)                                                               \
 __attribute__((always_inline)) static inline uint##_size##_t                   \
-vmread##_size (struct virtual_machine * vm, uint32_t linear_address)           \
+vmread##_size (struct hart * hartptr, uint32_t linear_address)                 \
 {                                                                              \
+    struct virtual_machine * vm = hartptr->vmptr;                              \
     return direct_read##_size(vm, linear_address);                             \
 }
 
@@ -64,9 +65,10 @@ _(64)
 
 #define _(_size)                                                               \
 __attribute__((always_inline)) static inline void                              \
-vmwrite##_size (struct virtual_machine * vm, uint32_t linear_address,          \
+vmwrite##_size (struct hart * hartptr, uint32_t linear_address,                \
                uint##_size##_t value)                                          \
 {                                                                              \
+    struct virtual_machine * vm = hartptr->vmptr;                              \
     return direct_write##_size(vm, linear_address, value);                     \
 }
 

@@ -51,6 +51,13 @@ instruction_decoding_per_type(struct decoding * dec,
             // IMM 11:0
             dec->imm = (intrs >> 20) & 0xfff;  
             break;
+        case ENCODING_TYPE_S:
+            dec->funct3 = (intrs >> 12) & 7;
+            dec->rs1_index = (intrs >> 15) & 0x1f;
+            dec->rs2_index = (intrs >> 20) & 0x1f;
+            dec->imm = (intrs >> 7) & 0x1f;
+            dec->imm |= ((intrs >> 25) & 0x7f) << 5;
+            break;
         default:
             assert(0);
             break;
@@ -75,6 +82,7 @@ riscv_lui_translator(struct prefetch_blob * blob, uint32_t instruction)
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%eax, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(lui_instruction)
                      :
@@ -117,6 +125,7 @@ riscv_auipc_translator(struct prefetch_blob * blob, uint32_t instruction)
                          "movl "PIC_PARAM(2)", %%ecx;"
                          "addl %%ecx, %%eax;"
                          "movl %%eax, (%%rdx);"
+                         RESET_ZERO_REGISTER()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          END_INSTRUCTION(auipc_instruction)
                          :
@@ -142,8 +151,7 @@ static void
 prefetch_one_instruction(struct prefetch_blob * blob)
 {
     struct hart * hartptr = blob->opaque;
-    uint32_t instruction = vmread32(hartptr->vmptr,
-                                    blob->next_instruction_to_fetch);
+    uint32_t instruction = vmread32(hartptr, blob->next_instruction_to_fetch);
     uint8_t opcode = instruction & 0x7f;
     instruction_translator per_category_translator = translators[opcode];
     // NOTE: if assertion takes true, it indicates the instruction is not recognized
@@ -231,4 +239,5 @@ translation_init(void)
     translators[RISCV_OPCODE_JAL] = riscv_jal_translator;
     translators[RISCV_OPCODE_JARL] = riscv_jalr_translator;
     translators[RISCV_OPCODE_OP_IMM] = riscv_arithmetic_immediate_instructions_translation_entry;
+    translators[RISCV_OPCODE_STORE] = riscv_memory_store_instructions_translation_entry;
 }

@@ -6,11 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef void
-(*arithmetic_immediate_instruction_translator)(struct decoding * dec,
-                                               struct prefetch_blob * blob,
-                                               uint32_t);
-
 
 static void
 riscv_addi_translator(struct decoding * dec, struct prefetch_blob * blob,
@@ -31,6 +26,7 @@ riscv_addi_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "shl $2, %%edx;"
                          "addq %%r15, %%rdx;"
                          "movl %%eax, (%%rdx);"
+                         RESET_ZERO_REGISTER()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          END_INSTRUCTION(addi_instruction)
                          :
@@ -72,6 +68,7 @@ riscv_stli_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%ecx, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(stli_instruction)
                      :
@@ -113,6 +110,7 @@ riscv_stliu_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%ecx, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(stliu_instruction)
                      :
@@ -153,6 +151,7 @@ riscv_xori_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%eax, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(xori_instruction)
                      :
@@ -193,6 +192,7 @@ riscv_ori_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%eax, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(ori_instruction)
                      :
@@ -233,6 +233,7 @@ riscv_andi_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%eax, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(andi_instruction)
                      :
@@ -273,6 +274,7 @@ riscv_slli_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
                      "movl %%eax, (%%rdx);"
+                     RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(slli_instruction)
                      :
@@ -315,6 +317,7 @@ riscv_right_shift_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "shl $2, %%edx;"
                          "addq %%r15, %%rdx;"
                          "movl %%eax, (%%rdx);"
+                         RESET_ZERO_REGISTER()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          END_INSTRUCTION(srli_instruction)
                          :
@@ -347,6 +350,7 @@ riscv_right_shift_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "shl $2, %%edx;"
                          "addq %%r15, %%rdx;"
                          "movl %%eax, (%%rdx);"
+                         RESET_ZERO_REGISTER()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          END_INSTRUCTION(srai_instruction)
                          :
@@ -368,7 +372,7 @@ riscv_right_shift_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
-static arithmetic_immediate_instruction_translator per_funct3_handlers[8];
+static instruction_sub_translator per_funct3_handlers[8];
 
 void
 riscv_arithmetic_immediate_instructions_translation_entry(struct prefetch_blob * blob,

@@ -27,6 +27,21 @@ guest_kernel_entry:
     srai a7, a3, 4
     jal test_procedure
     jal ra, kernel_init
+    li a0, 0xb8000
+    lw a1, (a0)
+
+
+    li a1, 0x8f008181
+    sw a1, (a0)
+
+    lh a2, (a0)
+    lhu a3, (a0)
+
+    lb a4, (a0)
+    lbu a5, (a0)
+    jal ra, 2f
+2:
+    wfi
 
 test_procedure:
     addi sp, sp, -16

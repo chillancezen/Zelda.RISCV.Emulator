@@ -240,4 +240,5 @@ translation_init(void)
     translators[RISCV_OPCODE_JARL] = riscv_jalr_translator;
     translators[RISCV_OPCODE_OP_IMM] = riscv_arithmetic_immediate_instructions_translation_entry;
     translators[RISCV_OPCODE_STORE] = riscv_memory_store_instructions_translation_entry;
+    translators[RISCV_OPCODE_LOAD] = riscv_memory_load_instructions_translation_entry;
 }

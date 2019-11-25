@@ -198,4 +198,9 @@ instruction_decoding_per_type(struct decoding * dec,
 void
 riscv_memory_store_instructions_translation_entry(struct prefetch_blob * blob,
                                                   uint32_t instruction);
+
+void
+riscv_memory_load_instructions_translation_entry(struct prefetch_blob * blob,
+                                                  uint32_t instruction);
+
 #endif

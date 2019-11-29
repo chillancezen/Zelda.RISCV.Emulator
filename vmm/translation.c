@@ -58,6 +58,15 @@ instruction_decoding_per_type(struct decoding * dec,
             dec->imm = (intrs >> 7) & 0x1f;
             dec->imm |= ((intrs >> 25) & 0x7f) << 5;
             break;
+        case ENCODING_TYPE_B:
+            dec->funct3 = (intrs >> 12) & 0x7;
+            dec->rs1_index = (intrs >> 15) & 0x1f;
+            dec->rs2_index = (intrs >> 20) & 0x1f;
+            dec->imm = (intrs >> 8) & 0xf; // 4 bits
+            dec->imm |= ((intrs >> 25) & 0x3f) << 4; // 6 bits
+            dec->imm |= ((intrs >> 7) & 0x1) << 10; // 1 bit
+            dec->imm |= ((intrs >> 31) & 0x1) << 11; // 1 bit
+            break;
         default:
             assert(0);
             break;
@@ -241,4 +250,5 @@ translation_init(void)
     translators[RISCV_OPCODE_OP_IMM] = riscv_arithmetic_immediate_instructions_translation_entry;
     translators[RISCV_OPCODE_STORE] = riscv_memory_store_instructions_translation_entry;
     translators[RISCV_OPCODE_LOAD] = riscv_memory_load_instructions_translation_entry;
+    translators[RISCV_OPCODE_BRANCH] = riscv_branch_instructions_translation_entry;
 }

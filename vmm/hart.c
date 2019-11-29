@@ -39,7 +39,8 @@ void
 flush_translation_cache(struct hart * hart_instance)
 {
     hart_instance->nr_translated_instructions = 0;
-    hart_instance->translation_cache_ptr = 0; 
+    hart_instance->translation_cache_ptr = 0;
+    printf("*****FLUSH TRANSLATION CACHE*****\n");
 }
 
 static int

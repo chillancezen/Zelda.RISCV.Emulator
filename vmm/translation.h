@@ -26,7 +26,8 @@ enum INSTRUCTION_ENCODING_TYPE {
     ENCODING_TYPE_U = 1,
     ENCODING_TYPE_I,
     ENCODING_TYPE_UJ,
-    ENCODING_TYPE_S
+    ENCODING_TYPE_S,
+    ENCODING_TYPE_B
 };
 
 struct decoding {
@@ -154,6 +155,9 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 #define RESET_ZERO_REGISTER()                                                  \
     "movl $0x0, (%%r15);"
 
+#define TRAP_TO_VMM()                                                          \
+    "movq $vmm_entry_point, %%rax;"                                            \
+    "jmpq *%%rax;"
 
 // FIX: There is only one chance to flush the translation cache once
 // the translation procedure begins
@@ -201,6 +205,9 @@ riscv_memory_store_instructions_translation_entry(struct prefetch_blob * blob,
 
 void
 riscv_memory_load_instructions_translation_entry(struct prefetch_blob * blob,
-                                                  uint32_t instruction);
+                                                 uint32_t instruction);
 
+void
+riscv_branch_instructions_translation_entry(struct prefetch_blob * blob,
+                                            uint32_t instruction);
 #endif

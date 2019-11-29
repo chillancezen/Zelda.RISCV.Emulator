@@ -16,7 +16,7 @@ kernel_init(void)
     if (idx == 1) {
         *(uint8_t *)0xb8000 = 'c';
     }
-    for (idx = 0xf0000001; ((int32_t)idx) <= ((int32_t)0xf0000012); idx++) {
+    for (idx = 0xe0000001; ((int32_t)idx) <= ((int32_t)0xf0000012); idx++) {
         foo(idx, idx + 1);
     }
 }

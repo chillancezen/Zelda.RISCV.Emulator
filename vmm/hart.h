@@ -42,7 +42,7 @@ struct program_counter_mapping_item {
 #define MAX_INSTRUCTIONS_TOTRANSLATE 256
 // reserve a small trunk of space to transfer control to vmm
 #define RESERVED_CACHE_LENGTH 32
-
+#define VMM_STACK_SIZE (1024 * 8)
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
     REGISTER_TYPE pc;
@@ -54,6 +54,8 @@ struct hart {
 
     void * translation_cache;
     int translation_cache_ptr;
+
+    void * vmm_stack_ptr;
 }__attribute__((aligned(64)));
 
 struct prefetch_blob {

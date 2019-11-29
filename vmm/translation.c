@@ -226,10 +226,18 @@ vmresume(struct hart * hartptr)
                      :"memory");
 }
 
+int counter = 0;
 void
 vmexit(struct hart * hartptr)
 {
-    dump_hart(hartptr);
+    uint64_t rsp;
+
+    __asm__ volatile("movq %%rsp, %%rax;"
+                     :"=a"(rsp)
+                     :
+                     :"memory");
+    //printf("val = 0x%llx   %d\n", (long long unsigned int)rsp, counter++);
+    //dump_hart(hartptr);
     vmresume(hartptr);
 }
 

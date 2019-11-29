@@ -8,6 +8,11 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <stddef.h>
+
+
+uint64_t offset_of_vmm_stack = offsetof(struct hart, vmm_stack_ptr);
+
 void
 hart_init(struct hart * hart_instance, int hart_id)
 {
@@ -32,6 +37,13 @@ hart_init(struct hart * hart_instance, int hart_id)
     // grant exec privilege to the translation cache
     assert(!mprotect(hart_instance->translation_cache, TRANSLATION_CACHE_SIZE,
                      PROT_EXEC | PROT_READ | PROT_WRITE));
+
+    uint64_t vmm_stack =
+        (uint64_t)mmap(NULL, VMM_STACK_SIZE + 4096, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    vmm_stack &= ~4095;
+    hart_instance->vmm_stack_ptr = (void *)(vmm_stack + VMM_STACK_SIZE);
+    assert(hart_instance->vmm_stack_ptr);
 }
 
 

@@ -2,11 +2,19 @@
  * Copyright (c) 2019 Jie Zheng
  */
 
+.extern offset_of_vmm_stack
 .section .text
 .global vmm_entry_point
 vmm_entry_point:
-    // FIXME: switch stack during context switching, or the stack of the vmm
+    // FIXED: switch stack during context switching, or the stack of the vmm
     // may be potentially exhausted.
+    movq $offset_of_vmm_stack, %rsi
+    //int $3
+    movq (%rsi), %rdx
+    addq %r12, %rdx
+    movq (%rdx), %rdx
+    movq %rdx, %rsp
+
     .extern vmexit
     pushq %r12
     movq %r12, %rdi

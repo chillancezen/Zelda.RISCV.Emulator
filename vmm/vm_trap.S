@@ -9,11 +9,10 @@ vmm_entry_point:
     // FIXED: switch stack during context switching, or the stack of the vmm
     // may be potentially exhausted.
     movq $offset_of_vmm_stack, %rsi
-    //int $3
     movq (%rsi), %rdx
     addq %r12, %rdx
     movq (%rdx), %rdx
-    movq %rdx, %rsp
+    #movq %rdx, %rsp
 
     .extern vmexit
     pushq %r12

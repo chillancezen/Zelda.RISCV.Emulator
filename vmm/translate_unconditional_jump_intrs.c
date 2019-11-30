@@ -103,6 +103,7 @@ riscv_jalr_translator(struct prefetch_blob * blob, uint32_t instruction)
                      "movl (%%rdx), %%ebx;"
                      "movl "PIC_PARAM(3)", %%eax;"
                      "addl %%eax, %%ebx;" // <=== the jump target
+                     "btr $0x0, %%ebx;"
                      "movl "PIC_PARAM(0)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"

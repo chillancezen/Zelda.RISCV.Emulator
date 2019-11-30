@@ -27,7 +27,8 @@ enum INSTRUCTION_ENCODING_TYPE {
     ENCODING_TYPE_I,
     ENCODING_TYPE_UJ,
     ENCODING_TYPE_S,
-    ENCODING_TYPE_B
+    ENCODING_TYPE_B,
+    ENCODING_TYPE_R
 };
 
 struct decoding {
@@ -37,6 +38,7 @@ struct decoding {
     uint8_t rd_index;
     uint8_t rs1_index;
     uint8_t rs2_index;
+    uint8_t funct7;
     uint32_t imm;
 };
 
@@ -210,4 +212,8 @@ riscv_memory_load_instructions_translation_entry(struct prefetch_blob * blob,
 void
 riscv_branch_instructions_translation_entry(struct prefetch_blob * blob,
                                             uint32_t instruction);
+
+void
+riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
+                                                uint32_t instruction);
 #endif

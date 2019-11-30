@@ -67,6 +67,13 @@ instruction_decoding_per_type(struct decoding * dec,
             dec->imm |= ((intrs >> 7) & 0x1) << 10; // 1 bit
             dec->imm |= ((intrs >> 31) & 0x1) << 11; // 1 bit
             break;
+        case ENCODING_TYPE_R:
+            dec->funct3 = (intrs >> 12) & 0x7;
+            dec->rd_index = (intrs >> 7) & 0x1f;
+            dec->rs1_index = (intrs >> 15) & 0x1f;
+            dec->rs2_index = (intrs >> 20) & 0x1f;
+            dec->funct7 = (intrs >> 25) & 0x7f;
+            break;
         default:
             assert(0);
             break;
@@ -156,6 +163,7 @@ riscv_auipc_translator(struct prefetch_blob * blob, uint32_t instruction)
     blob->next_instruction_to_fetch += 4;
 }
 
+
 static void
 prefetch_one_instruction(struct prefetch_blob * blob)
 {
@@ -164,6 +172,12 @@ prefetch_one_instruction(struct prefetch_blob * blob)
     uint8_t opcode = instruction & 0x7f;
     instruction_translator per_category_translator = translators[opcode];
     // NOTE: if assertion takes true, it indicates the instruction is not recognized
+    if (!per_category_translator) {
+        printf("No translator found for instruction at:0x%x\n",
+               blob->next_instruction_to_fetch);
+        dump_hart(hartptr);
+        exit(-1);
+    }
     assert(per_category_translator);
     per_category_translator(blob, instruction);
 }
@@ -237,7 +251,7 @@ vmexit(struct hart * hartptr)
                      :
                      :"memory");
     //printf("val = 0x%llx   %d\n", (long long unsigned int)rsp, counter++);
-    //dump_hart(hartptr);
+    dump_hart(hartptr);
     vmresume(hartptr);
 }
 
@@ -259,4 +273,5 @@ translation_init(void)
     translators[RISCV_OPCODE_STORE] = riscv_memory_store_instructions_translation_entry;
     translators[RISCV_OPCODE_LOAD] = riscv_memory_load_instructions_translation_entry;
     translators[RISCV_OPCODE_BRANCH] = riscv_branch_instructions_translation_entry;
+    translators[RISCV_OPCODE_OP] = riscv_arithmetic_instructions_translation_entry;
 }

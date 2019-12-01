@@ -12,7 +12,7 @@ vmm_entry_point:
     movq (%rsi), %rdx
     addq %r12, %rdx
     movq (%rdx), %rdx
-    #movq %rdx, %rsp
+    movq %rdx, %rsp
 
     .extern vmexit
     pushq %r12

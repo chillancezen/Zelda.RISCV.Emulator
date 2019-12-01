@@ -251,7 +251,7 @@ vmexit(struct hart * hartptr)
                      :
                      :"memory");
     //printf("val = 0x%llx   %d\n", (long long unsigned int)rsp, counter++);
-    dump_hart(hartptr);
+    //dump_hart(hartptr);
     vmresume(hartptr);
 }
 

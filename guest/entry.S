@@ -52,6 +52,12 @@ guest_kernel_entry:
     li a5, 0xffff
     or a6, a4, a5
     xor a7, a4, a5
+    li a0, -0x124
+    li a1, -0x123
+    sltu a2, a0, a1
+    li a0, 0xbeefdead
+    li a1, 33
+    sra a2, a0, a1
     jal ra, test_procedure
     wfi
 

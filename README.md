@@ -36,3 +36,8 @@ The system level emulator for RISCV ISA
 - [x] OR rd, rs1, rs2
 - [x] AND rd, rs1, rs2
 - [x] XOR rd, rs1, rs2
+- [x] SLL rd, rs1, rs2
+- [x] SRL rd, rs1, rs2
+- [x] SRA rd, rs1, rs2
+- [x] SLT rd, rs1, rs2
+- [x] SLTU rd, rs1, rs2

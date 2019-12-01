@@ -129,4 +129,15 @@ dump_hart(struct hart * hartptr)
             printf("\n");
         }
     }
+    printf("\tThere are %d items in translation cache:\n",
+           hartptr->nr_translated_instructions);
+    struct program_counter_mapping_item * items = hartptr->pc_mappings;
+    for (index = 0; index < hartptr->nr_translated_instructions; index++) {
+        printf("\t0x%08x: 0x%p ", items[index].guest_pc,
+               (hartptr->translation_cache + items[index].tc_offset));
+        if (((index + 1) % 4) == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
 }

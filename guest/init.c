@@ -9,6 +9,29 @@ foo(int a, int b)
     return a + b;
 }
 
+
+unsigned int strlen(const char * str)
+{
+    uint32_t ret = 0;
+    while(*str) {
+        ret++;
+        str++;
+    }
+    return ret;
+}
+
+unsigned int count_decoded_length(const char *encoded) {
+
+    unsigned int len = strlen(encoded), padding = 0;
+
+    if (encoded[len - 1] == '=' && encoded[len - 2] == '=')
+        padding = 2;
+    else if (encoded[len - 1] == '=')
+        padding = 1;
+
+    return (len * 3) / 4 - padding;
+}
+
 void
 kernel_init(void)
 {
@@ -19,4 +42,6 @@ kernel_init(void)
     for (idx = 0xe0000001; ((uint32_t)idx) <= ((uint32_t)0xe0000012); idx++) {
         foo(idx, idx + 1);
     }
+    count_decoded_length(welcome);
 }
+

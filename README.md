@@ -1,8 +1,9 @@
 # ZeldaOS.RISCV
-The system level emulator for RISCV ISA
+The system level emulator which utilizes dynamic binary translation for RISCV ISA
 
 
-## Emulated ISAs and Instructions
+
+## Unprivileged ISAs
 #### RV32I instructions
 - [X] LUI rd, imm
 - [X] AUIPC rd, offset
@@ -41,3 +42,22 @@ The system level emulator for RISCV ISA
 - [x] SRA rd, rs1, rs2
 - [x] SLT rd, rs1, rs2
 - [x] SLTU rd, rs1, rs2
+- [X] FENCE pred, succ
+- [x] FENCE.I
+
+#### RV32A instructions
+
+- [ ] LR.W aqrl, rd, (rs1)
+- [ ] SC.W aqrl, rd, rs2,(rs1)
+- [ ] AMOSWAP.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOADD.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOXOR.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOOR.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOAND.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOMIN.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOMAX.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOMINU.W aqrl, rd, rs2, (rs1) 
+- [ ] AMOMAXU.W aqrl, rd, rs2, (rs1)
+
+## supervisor-level ISAs
+## machine-level ISAs

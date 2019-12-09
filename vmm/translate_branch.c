@@ -279,7 +279,7 @@ riscv_branch_instructions_translation_entry(struct prefetch_blob * blob,
 {
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_B);
-    assert(per_funct3_handlers[dec.funct3]);
+    ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }
 

@@ -380,7 +380,7 @@ riscv_arithmetic_immediate_instructions_translation_entry(struct prefetch_blob *
 {
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_I);
-    assert(per_funct3_handlers[dec.funct3]);
+    ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }
 

@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <hart.h>
 #include <physical_memory.h>
-#include <assert.h>
+#include <util.h>
 
 struct virtual_machine {
 
@@ -22,7 +22,7 @@ __attribute__((always_inline))
 static inline struct hart *
 hart_by_id(struct virtual_machine * vm, int hart_id)
 {
-    assert(hart_id >= 0 && hart_id < vm->nr_harts);
+    ASSERT(hart_id >= 0 && hart_id < vm->nr_harts);
     return &vm->harts[hart_id];
 }
 
@@ -40,4 +40,8 @@ struct virtual_machine_spec {
 void
 virtual_machine_init(struct virtual_machine * vm,
                      const struct virtual_machine_spec * spec);
+
+void
+uart_init(void);
+
 #endif

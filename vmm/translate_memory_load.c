@@ -4,7 +4,6 @@
 
 #include <translation.h>
 #include <util.h>
-#include <assert.h>
 #include <string.h>
 #include <mmu.h>
 
@@ -263,7 +262,7 @@ riscv_memory_load_instructions_translation_entry(struct prefetch_blob * blob,
 {
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_I);
-    assert(per_funct3_handlers[dec.funct3]);
+    ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }
 

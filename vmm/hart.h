@@ -5,7 +5,7 @@
 #define _HART_H
 
 #include <stdint.h>
-#include <assert.h>
+#include <util.h>
 
 #define XLEN 32
 
@@ -81,7 +81,7 @@ unoccupied_cache_size(struct hart * hart_instance)
         ret = TRANSLATION_CACHE_SIZE - hart_instance->translation_cache_ptr -
               RESERVED_CACHE_LENGTH;
     }
-    assert(ret >= 0);
+    ASSERT(ret >= 0);
     return ret;
 }
 

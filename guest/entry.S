@@ -58,6 +58,7 @@ guest_kernel_entry:
     li a0, 0xbeefdead
     li a1, 33
     sra a2, a0, a1
+    fence.i 
     jal ra, test_procedure
     wfi
 

@@ -56,7 +56,7 @@ __asm__ volatile ("movq $" #indicator "_translation_end, %%rdx;"               \
 __asm__ volatile (#indicator  "_translation_begin:\n")
 
 
-#define DEBUG_TRANSLATION
+//#define DEBUG_TRANSLATION
 
 #if defined(DEBUG_TRANSLATION)
 #include <stdio.h>
@@ -72,12 +72,12 @@ __asm__ volatile (#indicator  "_translation_end:\n")
 {                                                                              \
     int __instruction_block_len = TRANSLATION_SIZE(indicator);                 \
     void * __instruction_block_begin = TRANSLATION_BEGIN_ADDR(indicator);      \
-    assert(!add_translation_item(hart_instance, instruction_linear_addr,       \
+    ASSERT(!add_translation_item(hart_instance, instruction_linear_addr,       \
                                  __instruction_block_begin,                    \
                                  __instruction_block_len));                    \
     struct program_counter_mapping_item * __item=                              \
         search_translation_item(hart_instance, instruction_linear_addr);       \
-    assert(__item && __item->guest_pc == instruction_linear_addr);             \
+    ASSERT(__item && __item->guest_pc == instruction_linear_addr);             \
     int __nr_param = (int)(sizeof(indicator##_params)/                         \
                            sizeof(indicator##_params[0]));                     \
     void * __instruction_block_end = hart_instance->translation_cache +        \

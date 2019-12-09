@@ -4,7 +4,7 @@
 
 #include <translation.h>
 #include <string.h>
-
+#include <util.h>
 static void
 riscv_add_translator(struct decoding * dec, struct prefetch_blob * blob,
                      uint32_t instruction)
@@ -96,7 +96,7 @@ riscv_add_sub_translator(struct decoding * dec, struct prefetch_blob * blob,
     if (dec->funct7 == 0x20) {
         riscv_sub_translator(dec, blob, instruction);
     } else {
-        assert(!dec->funct7);
+        ASSERT(!dec->funct7);
         riscv_add_translator(dec, blob, instruction);
     }
 }
@@ -457,7 +457,7 @@ riscv_srl_sra_translator(struct decoding * dec, struct prefetch_blob * blob,
     if (dec->funct7 == 0x20) {
         riscv_sra_translator(dec, blob, instruction);
     } else {
-        assert(!dec->funct7);
+        ASSERT(!dec->funct7);
         riscv_srl_translator(dec, blob, instruction);
     }
 }
@@ -469,7 +469,7 @@ riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
 {
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_R);
-    assert(per_funct3_handlers[dec.funct3]);
+    ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }
 

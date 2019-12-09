@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 
-char * welcome = "Hello World\n";
+char * welcome = "Hello RISC-V\n";
 
 int
 foo(int a, int b)
@@ -20,6 +20,14 @@ unsigned int strlen(const char * str)
     return ret;
 }
 
+void
+raw_puts(const char * text)
+{
+    uint8_t * ptr = (uint8_t *)text;
+    while(*ptr) {
+        *(uint8_t *)0x10000000 = *ptr++;
+    }
+}
 unsigned int count_decoded_length(const char *encoded) {
 
     unsigned int len = strlen(encoded), padding = 0;
@@ -43,5 +51,14 @@ kernel_init(void)
         foo(idx, idx + 1);
     }
     count_decoded_length(welcome);
+    {
+        uint8_t * ptr = (uint8_t *)welcome;
+        while (*ptr) {
+            //*ptr = *ptr + 1;
+            ptr++;
+        }
+    }
+    raw_puts(welcome);
+    raw_puts("\n");
 }
 

@@ -4,12 +4,11 @@
 #include <hart.h>
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <stddef.h>
-
+#include <util.h>
 
 uint64_t offset_of_vmm_stack = offsetof(struct hart, vmm_stack_ptr);
 
@@ -26,16 +25,16 @@ hart_init(struct hart * hart_instance, int hart_id)
                                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     tc_base &= ~4095;
     hart_instance->translation_cache = (void *)tc_base;
-    assert(hart_instance->translation_cache);
+    ASSERT(hart_instance->translation_cache);
 
     hart_instance->pc_mappings =
         aligned_alloc(4096, MAX_INSTRUCTIONS_TOTRANSLATE *
                             sizeof(struct program_counter_mapping_item));
-    assert(hart_instance->pc_mappings);
+    ASSERT(hart_instance->pc_mappings);
     flush_translation_cache(hart_instance);
 
     // grant exec privilege to the translation cache
-    assert(!mprotect(hart_instance->translation_cache, TRANSLATION_CACHE_SIZE,
+    ASSERT(!mprotect(hart_instance->translation_cache, TRANSLATION_CACHE_SIZE,
                      PROT_EXEC | PROT_READ | PROT_WRITE));
 
     uint64_t vmm_stack =
@@ -43,7 +42,7 @@ hart_init(struct hart * hart_instance, int hart_id)
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     vmm_stack &= ~4095;
     hart_instance->vmm_stack_ptr = (void *)(vmm_stack + VMM_STACK_SIZE);
-    assert(hart_instance->vmm_stack_ptr);
+    ASSERT(hart_instance->vmm_stack_ptr);
 }
 
 
@@ -52,7 +51,7 @@ flush_translation_cache(struct hart * hart_instance)
 {
     hart_instance->nr_translated_instructions = 0;
     hart_instance->translation_cache_ptr = 0;
-    printf("*****FLUSH TRANSLATION CACHE*****\n");
+    //printf("*****FLUSH TRANSLATION CACHE*****\n");
 }
 
 static int

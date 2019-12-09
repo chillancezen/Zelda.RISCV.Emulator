@@ -75,7 +75,7 @@ instruction_decoding_per_type(struct decoding * dec,
             dec->funct7 = (intrs >> 25) & 0x7f;
             break;
         default:
-            assert(0);
+            ASSERT(0);
             break;
     }
 }
@@ -171,14 +171,14 @@ prefetch_one_instruction(struct prefetch_blob * blob)
     uint32_t instruction = vmread32(hartptr, blob->next_instruction_to_fetch);
     uint8_t opcode = instruction & 0x7f;
     instruction_translator per_category_translator = translators[opcode];
-    // NOTE: if assertion takes true, it indicates the instruction is not recognized
+    // NOTE: if ASSERTion takes true, it indicates the instruction is not recognized
     if (!per_category_translator) {
         printf("No translator found for instruction at:0x%x\n",
                blob->next_instruction_to_fetch);
         dump_hart(hartptr);
-        exit(-1);
+        __not_reach();
     }
-    assert(per_category_translator);
+    ASSERT(per_category_translator);
     per_category_translator(blob, instruction);
 }
 
@@ -226,7 +226,7 @@ vmresume(struct hart * hartptr)
     prefetch_instructions(hartptr);
     // transfer control to guest code by jumping into translation cache
     struct program_counter_mapping_item * ti;
-    assert(ti = search_translation_item(hartptr, hartptr->pc));
+    ASSERT(ti = search_translation_item(hartptr, hartptr->pc));
     __asm__ volatile("movq %%rax, %%r15;"
                      "movq %%rbx, %%r14;"
                      "movq %%rcx, %%r13;"
@@ -258,7 +258,7 @@ vmexit(struct hart * hartptr)
 void
 vmpanic(struct hart * hartptr)
 {
-    assert(0);
+    ASSERT(0);
 }
 
 __attribute__((constructor)) void

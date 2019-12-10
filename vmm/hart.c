@@ -17,7 +17,7 @@ hart_init(struct hart * hart_instance, int hart_id)
 {
     memset(hart_instance, 0x0, sizeof(struct hart));
     hart_instance->hart_id = hart_id;
-
+    hart_instance->hart_magic = HART_MAGIC_WORD;
     // mprotect requires the memory is obtained by mmap, or its behavior is
     // undefined.
     uint64_t tc_base = (uint64_t)mmap(NULL, TRANSLATION_CACHE_SIZE + 4096,
@@ -51,7 +51,6 @@ flush_translation_cache(struct hart * hart_instance)
 {
     hart_instance->nr_translated_instructions = 0;
     hart_instance->translation_cache_ptr = 0;
-    //printf("*****FLUSH TRANSLATION CACHE*****\n");
 }
 
 static int
@@ -132,7 +131,7 @@ dump_hart(struct hart * hartptr)
            hartptr->nr_translated_instructions);
     struct program_counter_mapping_item * items = hartptr->pc_mappings;
     for (index = 0; index < hartptr->nr_translated_instructions; index++) {
-        printf("\t0x%08x: 0x%p ", items[index].guest_pc,
+        printf("\t0x%08x: %p ", items[index].guest_pc,
                (hartptr->translation_cache + items[index].tc_offset));
         if (((index + 1) % 4) == 0) {
             printf("\n");

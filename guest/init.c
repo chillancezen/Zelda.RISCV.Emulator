@@ -24,10 +24,17 @@ void
 raw_puts(const char * text)
 {
     uint8_t * ptr = (uint8_t *)text;
+    uint8_t temp = 0;
     while(*ptr) {
-        *(uint8_t *)0x10000000 = *ptr++;
+        temp = *ptr;
+        //__asm__ volatile("ebreak;");
+        *(uint8_t *)0x10000000 = temp;
+        ptr++;
     }
 }
+void
+raw_puts_another(const char *);
+
 unsigned int count_decoded_length(const char *encoded) {
 
     unsigned int len = strlen(encoded), padding = 0;
@@ -44,6 +51,7 @@ void
 kernel_init(void)
 {
     int idx = 1;
+#if 1
     if (idx == 1) {
         *(uint8_t *)0xb8000 = 'c';
     }
@@ -58,7 +66,14 @@ kernel_init(void)
             ptr++;
         }
     }
-    raw_puts(welcome);
-    raw_puts("\n");
+#endif
+    //raw_puts(welcome);
+    raw_puts_another("Link Is The Devil\n");
+    raw_puts_another("NULL EMPTRY\n");
+    //raw_puts("\n");
+    for (idx = 0; idx < 5; idx++) {
+        raw_puts(welcome);
+        raw_puts("Hello RISCV\n");
+    }
 }
 

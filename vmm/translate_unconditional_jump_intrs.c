@@ -62,8 +62,7 @@ riscv_jal_translator(struct prefetch_blob * blob, uint32_t instruction)
                          "movl %%eax, (%%r14);"
                          RESET_ZERO_REGISTER()
                          // FIXED: insert instructions to trap to VMM
-                         TRAP_TO_VMM()
-                         END_INSTRUCTION(jal_instruction_without_target)
+                         TRAP_TO_VMM(jal_instruction_without_target)
                          :
                          :
                          :"memory", "%rax", "%rdx");
@@ -111,7 +110,7 @@ riscv_jalr_translator(struct prefetch_blob * blob, uint32_t instruction)
                      "movl %%eax, (%%rdx);"
                      "movl %%ebx, (%%r14);" // Update the hart PC
                      RESET_ZERO_REGISTER()
-                     TRAP_TO_VMM()
+                     TRAP_TO_VMM(jalr_instruction)
                      :
                      :
                      :"memory", "%eax", "%ebx", "%ecx", "%edx");

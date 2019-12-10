@@ -31,7 +31,7 @@ riscv_beq_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(beq_instruction)
                          :
                          :
                          :"memory");
@@ -75,7 +75,7 @@ riscv_bne_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(bne_instruction)
                          :
                          :
                          :"memory");
@@ -120,7 +120,7 @@ riscv_blt_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(blt_instruction)
                          :
                          :
                          :"memory");
@@ -164,7 +164,7 @@ riscv_bltu_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(bltu_instruction)
                          :
                          :
                          :"memory");
@@ -208,7 +208,7 @@ riscv_bge_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(bge_instruction)
                          :
                          :
                          :"memory");
@@ -252,7 +252,7 @@ riscv_bgeu_translator(struct decoding * dec, struct prefetch_blob * blob,
                          "movl "PIC_PARAM(2)", %%edx;"
                          "1:"
                          "movl %%edx, (%%r14);"
-                         TRAP_TO_VMM()
+                         TRAP_TO_VMM(bgeu_instruction)
                          :
                          :
                          :"memory");

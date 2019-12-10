@@ -58,7 +58,8 @@ guest_kernel_entry:
     li a0, 0xbeefdead
     li a1, 33
     sra a2, a0, a1
-    fence.i 
+    fence.i
+    fence.i
     jal ra, test_procedure
     wfi
 
@@ -66,3 +67,34 @@ test_procedure:
     addi sp, sp, -16
     ret
 
+.global raw_puts_another
+raw_puts_another:
+    addi    sp,sp,-48
+    sw  s0,44(sp)
+    addi    s0,sp,48
+    sw  a0,-36(s0)
+    lw  a5,-36(s0)
+    sw  a5,-20(s0)
+    sb  zero,-21(s0)
+    j   2f
+1:
+    lw  a5,-20(s0)
+    lbu a5,0(a5)
+    sb  a5,-21(s0)
+    lui a5,0x10000
+    lbu a4,-21(s0)
+    sb  a4,0(a5) 
+    lw  a5,-20(s0)
+    addi    a5,a5,1
+    sw  a5,-20(s0)
+2:
+    lw  a5,-20(s0)
+    #ebreak
+    lbu a5,0(a5)
+    #ebreak
+    bnez    a5, 1b
+    nop
+    nop
+    lw  s0,44(sp)
+    addi    sp,sp,48
+    ret

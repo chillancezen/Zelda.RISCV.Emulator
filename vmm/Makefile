@@ -8,7 +8,7 @@ AS_OBJS = $(patsubst %.S,%.o,$(AS_FILES))
 
 # Use gnu11. . .
 CCPARAMS = -m64 -std=gnu11 -O0 -g3 -Werror -Wall -Wstrict-prototypes
-
+CCPARAMS += -include config.h
 
 GUEST_ELF = vmm64
 GUEST_MAP = vmm64.map

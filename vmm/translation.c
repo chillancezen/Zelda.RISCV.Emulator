@@ -184,6 +184,7 @@ prefetch_one_instruction(struct prefetch_blob * blob)
 
 extern void * vmm_jumper_begin;
 extern void * vmm_jumper_end;
+
 void
 prefetch_instructions(struct hart * hartptr)
 {
@@ -209,14 +210,29 @@ prefetch_instructions(struct hart * hartptr)
     if (old_trans_ptr != new_trans_ptr) {
         // translation cache updated, append the jumper which directs control
         // to vmm
+        // FIXED: always put a jumper here. otherwise, the control is transfered
+        // to the next instruction unintentionally. a case is given as below:
+        // [trace] 0x100108 lw_instruction
+        // [trace] 0x10010c lbu_instruction
+        // [trace] 0x100110 sb_instruction
+        // [trace] 0x100114 lui_instruction
+        // [trace] 0x100118 lbu_instruction
+        // [trace] 0x10011c sb_instruction
+        // [trace] 0x100120 lw_instruction
+        // [trace] 0x100124 addi_instruction
+        // [trace] 0x100128 sw_instruction
+        // XXX: here the jumper is covered next time a TU is translated. instruction @0x100128
+        // is never followed by instruction @0x10013c
+        // [trace] 0x10013c addi_instruction
+        // [trace] 0x100140 addi_instruction
+        // [trace] 0x100144 lw_instruction
+        // [trace] 0x100148 addi_instruction
+        // [trace] 0x10014c jalr_instruction
         uint8_t * jumper_code_begin = (uint8_t *)&vmm_jumper_begin;
         uint8_t * jumper_code_end = (uint8_t *)&vmm_jumper_end;
-        int index = 0;
-        for (; jumper_code_begin < jumper_code_end;
-             jumper_code_begin++, index++) {
-            *(uint8_t *)(index + hartptr->translation_cache_ptr +
-                         hartptr->translation_cache) = *jumper_code_begin;
-        }
+        memcpy(hartptr->translation_cache_ptr + hartptr->translation_cache,
+               jumper_code_begin, jumper_code_end - jumper_code_begin);
+        hartptr->translation_cache_ptr += jumper_code_end - jumper_code_begin;
     }
 }
 
@@ -227,6 +243,11 @@ vmresume(struct hart * hartptr)
     // transfer control to guest code by jumping into translation cache
     struct program_counter_mapping_item * ti;
     ASSERT(ti = search_translation_item(hartptr, hartptr->pc));
+    
+    #if defined(DEBUG_TRACE)
+        printf(ANSI_COLOR_GREEN"[vmresume]"ANSI_COLOR_RESET": 0x%x\n", hartptr->pc);
+    #endif
+
     __asm__ volatile("movq %%rax, %%r15;"
                      "movq %%rbx, %%r14;"
                      "movq %%rcx, %%r13;"
@@ -255,10 +276,20 @@ vmexit(struct hart * hartptr)
     vmresume(hartptr);
 }
 
+
 void
 vmpanic(struct hart * hartptr)
 {
     ASSERT(0);
+}
+
+void
+trace_riscv_instruction(const char * instr_desc, uint32_t instrunction_address)
+{
+    #if defined(DEBUG_TRACE)
+        printf(ANSI_COLOR_RED"[trace]"ANSI_COLOR_RESET" 0x%x %s\n",
+               instrunction_address, instr_desc);
+    #endif
 }
 
 __attribute__((constructor)) void
@@ -274,4 +305,6 @@ translation_init(void)
     translators[RISCV_OPCODE_LOAD] = riscv_memory_load_instructions_translation_entry;
     translators[RISCV_OPCODE_BRANCH] = riscv_branch_instructions_translation_entry;
     translators[RISCV_OPCODE_OP] = riscv_arithmetic_instructions_translation_entry;
+    translators[RISCV_OPCODE_FENCE] = riscv_fence_instructions_translation_entry;
+    translators[RISCV_OPCODE_SUPERVISOR_LEVEL] = riscv_supervisor_level_instructions_translation_entry;
 }

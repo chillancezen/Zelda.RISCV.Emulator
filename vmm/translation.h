@@ -16,7 +16,8 @@ enum RISCV_OPCODE {
     RISCV_OPCODE_STORE = 0x23,
     RISCV_OPCODE_OP_IMM = 0x13,
     RISCV_OPCODE_OP = 0x33,
-    RISCV_OPCODE_FENCE = 0x0f
+    RISCV_OPCODE_FENCE = 0x0f,
+    RISCV_OPCODE_SUPERVISOR_LEVEL = 0x73
 };
 
 // FIXME: This is really important, clear zero register for all the registers
@@ -89,7 +90,8 @@ __asm__ volatile (#indicator  "_translation_end:\n")
         *(__index + ((uint32_t *)__ptr)) = indicator##_params[__index];        \
     }                                                                          \
     __ptr = hart_instance->translation_cache + __item->tc_offset;              \
-    TRANS_DEBUG("%s at 0x%x {len:%d, tc:%p}: ", #indicator,                    \
+    TRANS_DEBUG(ANSI_COLOR_CYAN"[translate] %s at 0x%x {len:%d, tc:%p}: "ANSI_COLOR_RESET,\
+                #indicator,                                                    \
                 instruction_linear_addr, __instruction_block_len, __ptr);      \
     for (__index = 0; __index < __instruction_block_len; __index++) {          \
         TRANS_DEBUG("%02x ", ((uint8_t *)__ptr)[__index]);                     \
@@ -98,9 +100,19 @@ __asm__ volatile (#indicator  "_translation_end:\n")
 }
 
 #define PIC_PARAM(index) "(11f + 4 * "#index")(%%rip)"
+
+#if defined(DEBUG_TRACE)
+#define END_INSTRUCTION(indicator)                                             \
+                     "leaq 15f(%%rip), %%rdi;"                                 \
+                     "movq 16f(%%rip), %%rsi;"                                 \
+                     "movq $trace_riscv_instruction, %%rax;"                   \
+                     "call *%%rax;"                                            \
+                     "jmp "#indicator"_translation_end;"                       \
+                     "15: .string \"" #indicator "\""
+#else
 #define END_INSTRUCTION(indicator)                                             \
                      "jmp "#indicator"_translation_end;"
-
+#endif
 
 #define BEGIN_PARAM_SCHEMA()                                                   \
 __asm__ volatile(".align 4;"                                                   \
@@ -109,16 +121,29 @@ __asm__ volatile(".align 4;"                                                   \
 #define PARAM32()                                                              \
                  ".int 0xcccccccc;"
 
-#define END_PARAM_SCHEMA()                                                     \
-                 );
+#if defined(DEBUG_TRACE)
+    #define END_PARAM_SCHEMA()                                                 \
+                    "16:"                                                      \
+                    PARAM32()                                                  \
+                    );
+
+#else
+    #define END_PARAM_SCHEMA()                                                 \
+                    );
+#endif
 
 
 #define BEGIN_PARAM(indicator)                                                 \
 __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 
+#if defined(DEBUG_TRACE)
+    #define END_PARAM()                                                        \
+        , instruction_linear_address};
 
-#define END_PARAM()                                                            \
-};
+#else
+    #define END_PARAM()                                                        \
+        };
+#endif
 
 #define TRANSLATION_BEGIN_ADDR(indicator) ({                                   \
     uint64_t translation_begin_addr = 0;                                       \
@@ -157,9 +182,21 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
 #define RESET_ZERO_REGISTER()                                                  \
     "movl $0x0, (%%r15);"
 
-#define TRAP_TO_VMM()                                                          \
-    "movq $vmm_entry_point, %%rax;"                                            \
-    "jmpq *%%rax;"
+#if defined(DEBUG_TRACE)
+    #define TRAP_TO_VMM(indicator)                                             \
+        "leaq 15f(%%rip), %%rdi;"                                              \
+        "movq 16f(%%rip), %%rsi;"                                              \
+        "movq $trace_riscv_instruction, %%rax;"                                \
+        "call *%%rax;"                                                         \
+        "movq $vmm_entry_point, %%rax;"                                        \
+        "jmpq *%%rax;"                                                         \
+        "15: .string \"" #indicator "\""
+
+#else
+    #define TRAP_TO_VMM(indicator)                                             \
+        "movq $vmm_entry_point, %%rax;"                                        \
+        "jmpq *%%rax;"
+#endif
 
 // FIX: There is only one chance to flush the translation cache once
 // the translation procedure begins
@@ -216,4 +253,13 @@ riscv_branch_instructions_translation_entry(struct prefetch_blob * blob,
 void
 riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
                                                 uint32_t instruction);
+
+void
+riscv_fence_instructions_translation_entry(struct prefetch_blob * blob,
+                                           uint32_t instruction);
+
+void
+riscv_supervisor_level_instructions_translation_entry(struct prefetch_blob * blob,
+                                                      uint32_t instruction);
+
 #endif

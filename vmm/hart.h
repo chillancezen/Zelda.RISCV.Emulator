@@ -38,11 +38,15 @@ struct program_counter_mapping_item {
     uint32_t tc_offset;
 }__attribute__((packed));
 
-#define TRANSLATION_CACHE_SIZE (4096 * 1)
+// XXX: make it big, so it doesn't need to be flushed when debuging the TC
+#define TRANSLATION_CACHE_SIZE (4096 * 32)
 #define MAX_INSTRUCTIONS_TOTRANSLATE 256
 // reserve a small trunk of space to transfer control to vmm
-#define RESERVED_CACHE_LENGTH 32
 #define VMM_STACK_SIZE (1024 * 8)
+
+// for debug reason, put a magic word in each hart.
+#define HART_MAGIC_WORD 0xdeadbeef
+
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
     REGISTER_TYPE pc;
@@ -56,6 +60,8 @@ struct hart {
     int translation_cache_ptr;
 
     void * vmm_stack_ptr;
+
+    uint32_t hart_magic;
 }__attribute__((aligned(64)));
 
 struct prefetch_blob {
@@ -75,11 +81,16 @@ struct prefetch_blob {
 static inline int
 unoccupied_cache_size(struct hart * hart_instance)
 {
+    extern void * vmm_jumper_begin;
+    extern void * vmm_jumper_end;
+    uint8_t * jumper_code_begin = (uint8_t *)&vmm_jumper_begin;
+    uint8_t * jumper_code_end = (uint8_t *)&vmm_jumper_end;
+    
     int ret = 0;
     if (hart_instance->nr_translated_instructions <
         MAX_INSTRUCTIONS_TOTRANSLATE) {
         ret = TRANSLATION_CACHE_SIZE - hart_instance->translation_cache_ptr -
-              RESERVED_CACHE_LENGTH;
+              (jumper_code_end - jumper_code_begin);
     }
     ASSERT(ret >= 0);
     return ret;

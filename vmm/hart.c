@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <stddef.h>
 #include <util.h>
+#include <search.h>
+#include <sort.h>
 
 uint64_t offset_of_vmm_stack = offsetof(struct hart, vmm_stack_ptr);
 
@@ -87,8 +89,17 @@ add_translation_item(struct hart * hart_instance,
         guest_instruction_address;
     mappings[hart_instance->nr_translated_instructions].tc_offset = tc_offset;
     hart_instance->nr_translated_instructions ++;
+
+    INSERTION_SORT(struct program_counter_mapping_item,
+                   hart_instance->pc_mappings,
+                   hart_instance->nr_translated_instructions,
+                   comparing_mapping_item);
+
+    #if 0
+    // FIXED: Do not use glibc qsort which heavily depends system allocated stack.
     qsort(hart_instance->pc_mappings, hart_instance->nr_translated_instructions,
           sizeof(struct program_counter_mapping_item), comparing_mapping_item);
+    #endif
     return 0;    
 }
 
@@ -99,10 +110,17 @@ search_translation_item(struct hart * hart_instance,
     struct program_counter_mapping_item key = {
         .guest_pc = guest_instruction_address
     };
+    return SEARCH(struct program_counter_mapping_item,
+                  hart_instance->pc_mappings,
+                  hart_instance->nr_translated_instructions,
+                  comparing_mapping_item,
+                  &key);
+    #if 0
     return bsearch(&key, hart_instance->pc_mappings,
                    hart_instance->nr_translated_instructions,
                    sizeof(struct program_counter_mapping_item),
                    comparing_mapping_item);
+    #endif
 }
 
 void

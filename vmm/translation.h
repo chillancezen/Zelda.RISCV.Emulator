@@ -251,9 +251,13 @@ riscv_branch_instructions_translation_entry(struct prefetch_blob * blob,
                                             uint32_t instruction);
 
 void
-riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
-                                                uint32_t instruction);
-
+riscv_arithmetic_instructions_class0_translation_entry(struct decoding * dec,
+                                                       struct prefetch_blob * blob,
+                                                       uint32_t instruction);
+void
+riscv_mul_div_instructions_translation_entry(struct decoding * dec,
+                                             struct prefetch_blob * blob,
+                                             uint32_t instruction);
 void
 riscv_fence_instructions_translation_entry(struct prefetch_blob * blob,
                                            uint32_t instruction);

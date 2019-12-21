@@ -464,13 +464,18 @@ riscv_srl_sra_translator(struct decoding * dec, struct prefetch_blob * blob,
 static instruction_sub_translator per_funct3_handlers[8];
 
 void
-riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
-                                                uint32_t instruction)
+riscv_arithmetic_instructions_class0_translation_entry(struct decoding * dec,
+                                                       struct prefetch_blob * blob,
+                                                       uint32_t instruction)
 {
+    ASSERT(per_funct3_handlers[dec->funct3]);
+    per_funct3_handlers[dec->funct3](dec, blob, instruction);
+    #if 0
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_R);
     ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
+    #endif
 }
 
 

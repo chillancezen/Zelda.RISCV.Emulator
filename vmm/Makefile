@@ -24,7 +24,7 @@ GUEST_MAP = vmm64.map
 
 $(GUEST_ELF):$(AS_OBJS) $(C_OBJS)
 	@echo "[LD] $@"
-	@gcc $(LDPARAMS) -Wl,-Map=$(GUEST_MAP) -o $(GUEST_ELF) $(AS_OBJS) $(C_OBJS)
+	@gcc $(LDPARAMS) -Wl,-Map=$(GUEST_MAP) -lm -o $(GUEST_ELF) $(AS_OBJS) $(C_OBJS)
 
 clean:
 	@echo "[Cleaning] vmm64"

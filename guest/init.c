@@ -67,13 +67,17 @@ kernel_init(void)
         }
     }
 #endif
-    //raw_puts(welcome);
     raw_puts_another("Link Is The Devil\n");
-    raw_puts_another("NULL EMPTRY\n");
-    //raw_puts("\n");
+    char * buffer = "Link loves Zelda and Mipha...";
     for (idx = 0; idx < 5; idx++) {
-        raw_puts(welcome);
-        raw_puts("Hello RISCV\n");
+        buffer[0] ++;
+        raw_puts(buffer);
+        raw_puts("\n");
     }
+    int64_t a = 12;
+    uint64_t b = 20;
+    __attribute__((unused)) uint64_t c = a * b;
+    //__attribute__((unused)) float ff = 123 / 1.23;
+
 }
 

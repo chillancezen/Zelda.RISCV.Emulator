@@ -61,6 +61,36 @@ guest_kernel_entry:
     fence.i
     fence.i
     jal ra, test_procedure
+
+    li a3, 1234
+    li a4, -1000
+    mul a5, a3, a4
+    mulh a6, a3, a4
+    mulhu a7, a3, a4
+    mulhsu a2, a4, a3
+
+    li a0, 0xff000000
+    li a1, 0xff000000
+    mulhsu a2, a0, a1
+    
+    li a0, -1 << 31
+    li a1, 1
+    div a2, a0, a1
+
+    li a0, -1<<31
+    li a1, -1
+    divu a2, a0, a1
+
+    li a0, -1<<31
+    li a1, 1
+    rem a2, a0, a1
+
+    li a0, -1<<31
+    li a1, -1
+    remu a2, a0, a1
+    ebreak
+    j 1f
+1:
     wfi
 
 test_procedure:

@@ -39,7 +39,7 @@ struct program_counter_mapping_item {
 }__attribute__((packed));
 
 // XXX: make it big, so it doesn't need to be flushed when debuging the TC
-#define TRANSLATION_CACHE_SIZE (4096 * 32)
+#define TRANSLATION_CACHE_SIZE (4096 * 2)
 #define MAX_INSTRUCTIONS_TOTRANSLATE 256
 // reserve a small trunk of space to transfer control to vmm
 #define VMM_STACK_SIZE (1024 * 8)
@@ -92,7 +92,7 @@ unoccupied_cache_size(struct hart * hart_instance)
         ret = TRANSLATION_CACHE_SIZE - hart_instance->translation_cache_ptr -
               (jumper_code_end - jumper_code_begin);
     }
-    ASSERT(ret >= 0);
+    //ASSERT(ret >= 0);
     return ret;
 }
 

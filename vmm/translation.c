@@ -292,6 +292,24 @@ trace_riscv_instruction(const char * instr_desc, uint32_t instrunction_address)
     #endif
 }
 
+static void
+riscv_arithmetic_instructions_translation_entry(struct prefetch_blob * blob,
+                                                uint32_t instruction)
+{
+    struct decoding dec;
+    instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_R);
+    if (!(dec.funct7 & 0x3)) {
+        riscv_arithmetic_instructions_class0_translation_entry(&dec,
+                                                               blob,
+                                                               instruction);
+    } else {
+        ASSERT((dec.funct7 & 0x3) == 0x1);
+        riscv_mul_div_instructions_translation_entry(&dec,
+                                                     blob,
+                                                     instruction);
+    }
+}
+
 __attribute__((constructor)) void
 translation_init(void)
 {

@@ -9,6 +9,7 @@
 #include <vm.h>
 #include <mmu.h>
 #include <translation.h>
+#include <debug.h>
 
 
 int main(int argc, char ** argv)
@@ -23,7 +24,10 @@ int main(int argc, char ** argv)
 
     struct virtual_machine vm0;
     virtual_machine_init(&vm0, &spec);
-
+    
+    add_breakpoint(0x100004);
+    add_breakpoint(0x100064);
+     
     vmresume(hart_by_id(&vm0, 1));
     __asm__ volatile(".byte 0xcc;");
     return 0;

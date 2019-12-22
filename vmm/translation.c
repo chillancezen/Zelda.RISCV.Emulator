@@ -88,9 +88,8 @@ riscv_lui_translator(struct prefetch_blob * blob, uint32_t instruction)
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
 
-    PRECHECK_TRANSLATION_CACHE(lui_instruction, blob);
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_U);
-
+    PRECHECK_TRANSLATION_CACHE(lui_instruction, blob);
     BEGIN_TRANSLATION(lui_instruction);
     __asm__ volatile("movl "PIC_PARAM(0)", %%eax;"
                      "movl "PIC_PARAM(1)", %%edx;"
@@ -129,9 +128,8 @@ riscv_auipc_translator(struct prefetch_blob * blob, uint32_t instruction)
     struct hart * hartptr = (struct hart *)blob->opaque;
     struct decoding dec;
 
-    PRECHECK_TRANSLATION_CACHE(auipc_instruction, blob);
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_U);
-
+    PRECHECK_TRANSLATION_CACHE(auipc_instruction, blob);
     BEGIN_TRANSLATION(auipc_instruction);
         __asm__ volatile("movl "PIC_PARAM(1)", %%edx;"
                          "shl $2, %%edx;"

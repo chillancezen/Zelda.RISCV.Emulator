@@ -1,5 +1,5 @@
 #include <stdint.h>
-
+#include <printk.h>
 
 char * welcome = "Hello RISC-V\n";
 
@@ -74,10 +74,6 @@ kernel_init(void)
         raw_puts(buffer);
         raw_puts("\n");
     }
-    int64_t a = 12;
-    uint64_t b = 20;
-    __attribute__((unused)) uint64_t c = a * b;
-    //__attribute__((unused)) float ff = 123 / 1.23;
-
+    printk("Hello World from printk: 0x%d\n", 0x1234);
 }
 

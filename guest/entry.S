@@ -88,7 +88,7 @@ guest_kernel_entry:
     li a0, -1<<31
     li a1, -1
     remu a2, a0, a1
-    ebreak
+    #ebreak
     j 1f
 1:
     wfi

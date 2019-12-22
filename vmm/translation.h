@@ -48,6 +48,20 @@ vmresume(struct hart * hartptr);
 
 // before entering translation cache, the RBX is set to the address of the hart
 // registers group
+#if defined(NATIVE_DEBUGER)
+#define BEGIN_TRANSLATION(indicator)                                           \
+__asm__ volatile ("movq $" #indicator "_translation_end, %%rdx;"               \
+                  "jmpq *%%rdx;"                                               \
+                  :                                                            \
+                  :                                                            \
+                  :"%rdx");                                                    \
+__asm__ volatile (#indicator  "_translation_begin:"                            \
+                  "movq %%r12, %%rdi;"                                         \
+                  "movq $enter_vmm_shell, %%rax;"                              \
+                  "callq *%%rax;"                                              \
+                  :::"memory");
+
+#else
 #define BEGIN_TRANSLATION(indicator)                                           \
 __asm__ volatile ("movq $" #indicator "_translation_end, %%rdx;"               \
                   "jmpq *%%rdx;"                                               \
@@ -55,7 +69,7 @@ __asm__ volatile ("movq $" #indicator "_translation_end, %%rdx;"               \
                   :                                                            \
                   :"%rdx");                                                    \
 __asm__ volatile (#indicator  "_translation_begin:\n")
-
+#endif
 
 //#define DEBUG_TRANSLATION
 

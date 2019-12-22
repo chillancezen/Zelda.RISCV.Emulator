@@ -38,7 +38,7 @@ resolve_int32(int32_t qword)
 }
 
 static void
-resolve_hex_qword(uint32_t qword, uint8_t is_lowercase)
+resolve_hex_uint32(uint32_t qword, uint8_t is_lowercase)
 {
    uint8_t stack[DEFAULT_RESOLVE_STACK];
    uint8_t lower[] = "0123456789abcdef";
@@ -96,6 +96,7 @@ printk_mp_raw(const char * fmt, va_list arg_ptr)
                         resolve_int32(dword_arg);
                     }
                     break;
+                #if 0
                 case 'q': // This is a new notation for quad word integer type
                     {
                         int64_t qword_arg = va_arg(arg_ptr, uint64_t);
@@ -106,16 +107,17 @@ printk_mp_raw(const char * fmt, va_list arg_ptr)
                         resolve_int32(qword_arg);
                     }
                     break;
+                #endif
                 case 'x':
                     {
-                        uint64_t qword_arg = va_arg(arg_ptr, uint64_t);
-                        resolve_hex_qword(qword_arg, 1);
+                        uint32_t qword_arg = va_arg(arg_ptr, uint32_t);
+                        resolve_hex_uint32(qword_arg, 1);
                     }
                     break;
                 case 'X':
                     {
-                        uint64_t qword_arg = va_arg(arg_ptr, uint64_t);
-                        resolve_hex_qword(qword_arg, 0);
+                        uint32_t qword_arg = va_arg(arg_ptr, uint32_t);
+                        resolve_hex_uint32(qword_arg, 0);
                     }
                     break;
                 default:

@@ -9,7 +9,7 @@
 //#define DEBUG_TRACE
 //#define DEBUG_TRANSLATION
 
-#define NATIVE_DEBUGER
+//#define NATIVE_DEBUGER
 
 #define COLORED_OUTPUT
 

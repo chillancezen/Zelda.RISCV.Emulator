@@ -27,6 +27,7 @@
 }
 
 // FIXME: there must be a fix to improve the effenciy to sort the items.
+// it's perforance critical
 #define INSERTION_SORT(type, base, num, comp)                                  \
     SORT(type, base, num, comp)
 

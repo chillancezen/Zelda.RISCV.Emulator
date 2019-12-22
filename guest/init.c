@@ -77,5 +77,10 @@ kernel_init(void)
     }
     printk("Hello World from printk: 0x%d\n", 0x1234);
 #endif
+    printk("Hello World from printk: %d\n", 0xffffffff);
+    printk("hex: 0x%d\n", -234);
+    printk("hex: 0x%x\n", 0xffffffff);
+    printk("char:%c\n", 'H');
+    printk("string: %s\n", "Hello World");
 }
 

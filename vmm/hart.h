@@ -39,8 +39,10 @@ struct program_counter_mapping_item {
 }__attribute__((packed));
 
 // XXX: make it big, so it doesn't need to be flushed when debuging the TC
-#define TRANSLATION_CACHE_SIZE (4096 * 2)
+#define TRANSLATION_CACHE_SIZE (1024 * 64)
+// XXX: make it not that big, because it takes too much to search translated instruction.
 #define MAX_INSTRUCTIONS_TOTRANSLATE 256
+
 // reserve a small trunk of space to transfer control to vmm
 #define VMM_STACK_SIZE (1024 * 8)
 

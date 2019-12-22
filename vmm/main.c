@@ -12,6 +12,9 @@
 #include <debug.h>
 
 
+static uint32_t bps[] = {
+    //0x1001d8, 0x100238, 0x100204
+};
 int main(int argc, char ** argv)
 {
     struct virtual_machine_spec spec = {
@@ -24,7 +27,10 @@ int main(int argc, char ** argv)
 
     struct virtual_machine vm0;
     virtual_machine_init(&vm0, &spec);
-    //add_breakpoint(0x1001b8);    
+    int idx = 0;
+    for (; idx < sizeof(bps)/sizeof(bps[0]); idx++) {
+        add_breakpoint(bps[idx]);
+    }
     vmresume(hart_by_id(&vm0, 1));
     __asm__ volatile(".byte 0xcc;");
     return 0;

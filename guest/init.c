@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <printk.h>
+#include <unittest.h>
 
 char * welcome = "Hello RISC-V\n";
 
@@ -50,8 +51,9 @@ unsigned int count_decoded_length(const char *encoded) {
 void
 kernel_init(void)
 {
+    unit_test();
+#if 0
     int idx = 1;
-#if 1
     if (idx == 1) {
         *(uint8_t *)0xb8000 = 'c';
     }
@@ -66,7 +68,6 @@ kernel_init(void)
             ptr++;
         }
     }
-#endif
     raw_puts_another("Link Is The Devil\n");
     char * buffer = "Link loves Zelda and Mipha...";
     for (idx = 0; idx < 5; idx++) {
@@ -75,5 +76,6 @@ kernel_init(void)
         raw_puts("\n");
     }
     printk("Hello World from printk: 0x%d\n", 0x1234);
+#endif
 }
 

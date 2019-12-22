@@ -7,6 +7,7 @@ AS_OBJS = $(patsubst %.S,%.o,$(AS_FILES))
 
 ASPARAMS = -m64 -mno-red-zone
 CCPARAMS = -O0 -g3 -ffreestanding -mno-fdiv -mno-div -march=rv32ima -mabi=ilp32 -nostdlib -fno-builtin -fno-exceptions -Werror -Wall -Wstrict-prototypes
+#CCPARAMS = -O0 -g3 -ffreestanding -mno-fdiv -march=rv32ima -mabi=ilp32 -nostdlib -fno-builtin -fno-exceptions -Werror -Wall -Wstrict-prototypes
 LDPARAMS = -m elf32lriscv -static
 
 GUEST_ELF = guest.rv32.elf
@@ -20,7 +21,7 @@ CROSS_COMPILE = riscv32-unknown-elf-
 
 %.o: %.c
 	@echo "[CC] $<"
-	@$(CROSS_COMPILE)gcc $(CCPARAMS) -I. -o $@ -c $<
+	@$(CROSS_COMPILE)gcc $(CCPARAMS) -I. -g -Wa,-adhls -o $@ -c $< > $@.plain
 
 $(GUEST_IMG):$(GUEST_ELF)
 	@echo "[CT] $@"
@@ -34,5 +35,5 @@ $(GUEST_ELF):$(AS_OBJS) $(C_OBJS)
 clean:
 	@echo "[Cleaning] guest"
 	@rm -f *.o $(GUEST_ELF) $(GUEST_IMG) $(GUEST_MAP)
-
+	@rm -f *.o.plain
 

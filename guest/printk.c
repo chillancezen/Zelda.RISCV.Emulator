@@ -14,7 +14,7 @@ uart_put_char(uint8_t value)
 #define EBREAK() __asm__ volatile("ebreak;":::"memory")
 // XXX: for 64-bit Integer resolution
 static void
-resolve_qword(uint32_t qword)
+resolve_int32(int32_t qword)
 {
     uint8_t stack[DEFAULT_RESOLVE_STACK];
     int iptr = 0;
@@ -23,7 +23,7 @@ resolve_qword(uint32_t qword)
         return;   
     }
     while (qword && iptr < DEFAULT_RESOLVE_STACK) {
-        EBREAK();
+        //EBREAK();
         mod = qword % 10;
         //EBREAK();
         stack[iptr++] = '0' + mod;
@@ -93,7 +93,7 @@ printk_mp_raw(const char * fmt, va_list arg_ptr)
                             uart_put_char('-');
                             dword_arg = - dword_arg;
                         }
-                        resolve_qword(dword_arg);
+                        resolve_int32(dword_arg);
                     }
                     break;
                 case 'q': // This is a new notation for quad word integer type
@@ -103,7 +103,7 @@ printk_mp_raw(const char * fmt, va_list arg_ptr)
                             uart_put_char('-');
                             qword_arg = -qword_arg;
                         }
-                        resolve_qword(qword_arg);
+                        resolve_int32(qword_arg);
                     }
                     break;
                 case 'x':

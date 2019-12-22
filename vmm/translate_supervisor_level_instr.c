@@ -4,13 +4,15 @@
 
 #include <translation.h>
 #include <util.h>
+#include <debug.h>
 
 __attribute__((unused)) static void
 ebreak_callback(struct hart * hartptr)
 {
-    printf(ANSI_COLOR_MAGENTA"[breakpoint at 0x%x]:\n", hartptr->pc);
-    dump_hart(hartptr);
-    printf(ANSI_COLOR_RESET);
+    enter_vmm_shell(hartptr, 0);
+    //printf(ANSI_COLOR_MAGENTA"[breakpoint at 0x%x]:\n", hartptr->pc);
+    //dump_hart(hartptr);
+    //printf(ANSI_COLOR_RESET);
     //__asm__ volatile(".byte 0xcc");
 }
 

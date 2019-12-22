@@ -57,6 +57,7 @@ __asm__ volatile ("movq $" #indicator "_translation_end, %%rdx;"               \
                   :"%rdx");                                                    \
 __asm__ volatile (#indicator  "_translation_begin:"                            \
                   "movq %%r12, %%rdi;"                                         \
+                  "movq $1, %%rsi;"                                            \
                   "movq $enter_vmm_shell, %%rax;"                              \
                   "callq *%%rax;"                                              \
                   :::"memory");

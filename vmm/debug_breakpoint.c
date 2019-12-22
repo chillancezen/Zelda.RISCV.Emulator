@@ -20,9 +20,14 @@ addr_cmp(uint32_t * paddr0, uint32_t *paddr1)
 int
 add_breakpoint(uint32_t guest_addr)
 {
-
+    if (guest_addr & 0x3) {
+        return -2;
+    }
     if (nr_breakpoints >= MAX_BREAKPOINTS) {
         return -1;
+    }
+    if (is_address_breakpoint(guest_addr)) {
+        return 0;
     }
     breakpoints[nr_breakpoints] = guest_addr;
     nr_breakpoints += 1;
@@ -53,4 +58,17 @@ dump_breakpoints(void)
         printf("\n");
     }
     printf(ANSI_COLOR_RESET);
+}
+
+int
+add_breakpoint_command(struct hart * hartptr, int argc, char *argv[])
+{
+    if (argc == 0) {
+     goto out;   
+    }
+    uint32_t addr = strtol(argv[0], NULL, 16);
+    int rc = add_breakpoint(addr);
+    printf("adding breakpoint: 0x%x %s\n", addr, rc ? "fails" : "succeeds");
+    out:
+        return ACTION_CONTINUE;
 }

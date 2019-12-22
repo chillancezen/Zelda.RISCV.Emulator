@@ -10,19 +10,17 @@
 #include <util.h>
 
 static void
-print_hint(void)
+print_hint(struct hart * hartptr)
 {
-    printf(ANSI_COLOR_GREEN"(zelda.risc-v.dbg) "ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"(zelda.risc-v.dbg: "ANSI_COLOR_CYAN"0x%x"
+           ANSI_COLOR_GREEN") "ANSI_COLOR_RESET,
+           hartptr->pc);
 }
 
 #define CMDLINE_SIZE 256
 #define TOKEN_SIZE 64
 #define MAX_CMD_TOKEN_PREFIX 8
 
-enum ACTIONS {
-    ACTION_CONTINUE,
-    ACTION_STOP
-};
 struct cmd_registery_item {
     char * cmd_prefixs[MAX_CMD_TOKEN_PREFIX];
     int (*func)(struct hart * hartptr, int argc, char *argv[]);
@@ -75,6 +73,13 @@ static struct cmd_registery_item cmds_items[] = {
             NULL
         },
         .func = debug_continue 
+    },
+    {
+        .cmd_prefixs = {
+            "break",
+            NULL
+        },
+        .func = add_breakpoint_command
     }
 };
 
@@ -125,21 +130,25 @@ process_cmds_tokens(struct hart * hartptr, int argc, char *argv[])
 }
 
 void
-enter_vmm_shell(struct hart * hartptr)
+enter_vmm_shell(struct hart * hartptr, int check_bps)
 {
     ASSERT(hartptr->hart_magic == HART_MAGIC_WORD);
-    if (!is_address_breakpoint(hartptr->pc)) {
+    if (check_bps && !is_address_breakpoint(hartptr->pc)) {
         // The address is not tracked, go on.
         return;
     }
     char cmdline[CMDLINE_SIZE];
     char * tokens[TOKEN_SIZE];
     int nr_token;
+
+    static char token_buffer[TOKEN_SIZE][TOKEN_SIZE];
+    static char * last_tokens[TOKEN_SIZE];
+    static int last_nr_token = 0;
     while (!0) {
         nr_token = 0;
         memset(cmdline, 0x0, sizeof(cmdline));
         memset(tokens, 0x0, sizeof(tokens));
-        print_hint();
+        print_hint(hartptr);
         fgets(cmdline, sizeof(cmdline) - 1, stdin);
 
         {// strip the trailing carriage return '\n'
@@ -165,7 +174,21 @@ enter_vmm_shell(struct hart * hartptr)
                 }
             } while ((ptr = strtok(NULL, " ")));
         }
-        int action = process_cmds_tokens(hartptr, nr_token, tokens);
+        
+        int action;
+        if (nr_token) {
+            action = process_cmds_tokens(hartptr, nr_token, tokens);
+            // MUST make a copy.
+            int idx = 0;
+            for (idx = 0; idx < nr_token; idx++) {
+                strcpy(token_buffer[idx], tokens[idx]);
+                last_tokens[idx] = token_buffer[idx];
+            }
+            last_nr_token = nr_token;
+        } else {
+            action = process_cmds_tokens(hartptr, last_nr_token, last_tokens);
+        }
+
         if (action == ACTION_STOP) {
             break;
         } else if(action == ACTION_CONTINUE) {

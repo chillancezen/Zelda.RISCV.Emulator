@@ -23,7 +23,7 @@ resolve_qword(uint32_t qword)
         return;   
     }
     while (qword && iptr < DEFAULT_RESOLVE_STACK) {
-        //EBREAK();
+        EBREAK();
         mod = qword % 10;
         //EBREAK();
         stack[iptr++] = '0' + mod;

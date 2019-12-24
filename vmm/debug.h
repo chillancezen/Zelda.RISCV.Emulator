@@ -14,7 +14,7 @@ enum ACTIONS {
 };
 
 void
-enter_vmm_shell(struct hart * hartptr, int check_bps);
+enter_vmm_dbg_shell(struct hart * hartptr, int check_bps);
 
 
 int

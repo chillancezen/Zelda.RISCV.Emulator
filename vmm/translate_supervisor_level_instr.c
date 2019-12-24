@@ -9,11 +9,9 @@
 __attribute__((unused)) static void
 ebreak_callback(struct hart * hartptr)
 {
-    enter_vmm_shell(hartptr, 0);
-    //printf(ANSI_COLOR_MAGENTA"[breakpoint at 0x%x]:\n", hartptr->pc);
-    //dump_hart(hartptr);
-    //printf(ANSI_COLOR_RESET);
-    //__asm__ volatile(".byte 0xcc");
+#if defined(NATIVE_DEBUGER)
+    enter_vmm_dbg_shell(hartptr, 0);
+#endif
 }
 
 static void

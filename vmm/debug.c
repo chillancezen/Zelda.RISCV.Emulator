@@ -130,7 +130,7 @@ process_cmds_tokens(struct hart * hartptr, int argc, char *argv[])
 }
 
 void
-enter_vmm_shell(struct hart * hartptr, int check_bps)
+enter_vmm_dbg_shell(struct hart * hartptr, int check_bps)
 {
     ASSERT(hartptr->hart_magic == HART_MAGIC_WORD);
     if (check_bps && !is_address_breakpoint(hartptr->pc)) {

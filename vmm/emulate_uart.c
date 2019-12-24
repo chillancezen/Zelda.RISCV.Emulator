@@ -30,7 +30,7 @@ uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
     uart_buffer[uart_buffer_ptr++] = (uint8_t)value;
     if (uart_buffer_ptr == UART_BUFFER_SIZE || '\n' == (uint8_t)value) {
         uart_buffer[uart_buffer_ptr] = '\x0';
-        printf(ANSI_COLOR_CYAN"[uart] %s"ANSI_COLOR_RESET, uart_buffer);
+        printf(ANSI_COLOR_CYAN"[uart]"ANSI_COLOR_RESET" %s", uart_buffer);
         uart_buffer_ptr = 0x0;
     }
 }

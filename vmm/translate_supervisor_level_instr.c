@@ -62,17 +62,32 @@ riscv_supervisor_level_instructions_translation_entry(struct prefetch_blob * blo
                                                       uint32_t instruction)
 {
     struct decoding dec;
-    // FIXME: only funct3:000 is encoded with type-S, others are not.
-    instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_S);
+    // FIXED: only funct3:000 is encoded with type-S, others are not.
+    if (!((instruction >> 12) & 0x7)) {
+        instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_S);
+    } else {
+        instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_I);
+    }
     ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }
 
+
+void
+riscv_generic_csr_instructions_translator(struct decoding * dec,
+                                          struct prefetch_blob * blob,
+                                          uint32_t instruction);
 
 __attribute__((constructor)) static void
 supervisor_level_constructor(void)
 {
     memset(per_funct3_handlers, 0x0, sizeof(per_funct3_handlers));
     per_funct3_handlers[0x0] = riscv_funct3_000_translator;
+    per_funct3_handlers[0x1] = riscv_generic_csr_instructions_translator;
+    per_funct3_handlers[0x2] = riscv_generic_csr_instructions_translator;
+    per_funct3_handlers[0x3] = riscv_generic_csr_instructions_translator;
+    per_funct3_handlers[0x5] = riscv_generic_csr_instructions_translator;
+    per_funct3_handlers[0x6] = riscv_generic_csr_instructions_translator;
+    per_funct3_handlers[0x7] = riscv_generic_csr_instructions_translator;
 }
 

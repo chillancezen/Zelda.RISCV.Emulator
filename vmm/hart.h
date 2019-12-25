@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <util.h>
 
-#define XLEN 32
 
 #if XLEN == 32
 #define REGISTER_TYPE uint32_t
@@ -62,10 +61,14 @@ struct hart {
     int translation_cache_ptr;
 
     void * vmm_stack_ptr;
-
+    
+    void * csrs_base;
     uint32_t hart_magic;
 }__attribute__((aligned(64)));
 
+
+#define HART_REG(hartptr, index)                                               \
+    (((uint32_t *)&((hartptr)->registers))[index])
 struct prefetch_blob {
     // The guest address of instruction to fetch and translate in the next round
     uint32_t next_instruction_to_fetch;

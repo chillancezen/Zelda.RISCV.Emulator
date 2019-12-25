@@ -94,6 +94,9 @@ guest_kernel_entry:
     li a1, 0x00000007
     sub a2, a0, a1
 
+
+    li a0, 0x12345
+    csrw mscratch, a0
     //ebreak
     j 1f
 1:

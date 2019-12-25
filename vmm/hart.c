@@ -11,9 +11,29 @@
 #include <util.h>
 #include <search.h>
 #include <sort.h>
+#include <csr.h>
+
+struct csr_registery_entry * csr_registery_head = NULL;
 
 uint64_t offset_of_vmm_stack = offsetof(struct hart, vmm_stack_ptr);
 
+static void
+csr_registery_init(struct hart * hartptr)
+{
+    struct csr_registery_entry * ptr = csr_registery_head;
+    for (; ptr; ptr = ptr->next) {
+        ASSERT(!(ptr->csr_addr & 0xfffff000));
+        struct csr_entry * csr =
+            &((struct csr_entry *)hartptr->csrs_base)[ptr->csr_addr & 0xfff];
+        csr->is_valid = 1;
+        csr->csr_blob = 0;
+        csr->wpri_mask = ptr->csr_registery.wpri_mask;
+        csr->write = ptr->csr_registery.write;
+        csr->read = ptr->csr_registery.read;
+        csr->reset = ptr->csr_registery.reset;
+    }
+
+}
 void
 hart_init(struct hart * hart_instance, int hart_id)
 {
@@ -45,6 +65,12 @@ hart_init(struct hart * hart_instance, int hart_id)
     vmm_stack &= ~4095;
     hart_instance->vmm_stack_ptr = (void *)(vmm_stack + VMM_STACK_SIZE);
     ASSERT(hart_instance->vmm_stack_ptr);
+    // CSR INIT
+    hart_instance->csrs_base =
+        aligned_alloc(4096, 4096 * sizeof(struct csr_entry));
+    ASSERT(hart_instance->csrs_base);
+    memset(hart_instance->csrs_base, 0x0, 4096 * sizeof(struct csr_entry));
+    csr_registery_init(hart_instance);
 }
 
 

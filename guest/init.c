@@ -78,13 +78,13 @@ kernel_init(void)
     printk("Hello World from printk: 0x%d\n", 0x1234);
 #endif
     int idx = 0;
-    for (idx = 0; idx < 5; idx++) {
+    for (idx = 0; idx < 0; idx++) {
         __asm__ volatile("ebreak;");
         __asm__ volatile("ebreak;");
         __asm__ volatile("ebreak;");
     }
     printk("Hello World from printk: %d\n", 0xffffffff);
-    __asm__ volatile("ebreak;");
+    //__asm__ volatile("ebreak;");
     printk("hex: 0x%d\n", -234);
     printk("hex: 0x%x\n", 0xffffffff);
     printk("char:%c\n", 'H');

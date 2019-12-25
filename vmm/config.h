@@ -10,6 +10,7 @@
 
 #define BUILD_TYPE BUILD_TYPE_RELEASE
 
+#define XLEN 32
 
 //#define DEBUG_TRACE
 //#define DEBUG_TRANSLATION

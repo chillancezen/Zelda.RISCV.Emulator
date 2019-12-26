@@ -29,7 +29,9 @@ riscv_fence_i_translator(struct decoding * dec, struct prefetch_blob * blob,
             instruction_linear_address
         END_PARAM()
     COMMIT_TRANSLATION(fence_i_instruction, hartptr, instruction_linear_address);
-    blob->next_instruction_to_fetch += 4;
+    // Stop translation because after the fence.i instruction, the 
+    // translation cache will be flushed
+    blob->is_to_stop = 1;
 }
 
 

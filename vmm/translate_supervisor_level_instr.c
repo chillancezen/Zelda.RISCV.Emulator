@@ -48,7 +48,7 @@ riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
     if (dec->rs2_index == 0x1) {
         riscv_ebreak_translator(dec, blob, instruction); 
     } else {
-        printf("can not translate:0x%x at 0x%x\n", instruction, blob->next_instruction_to_fetch);
+        log_fatal("can not translate:0x%x at 0x%x\n", instruction, blob->next_instruction_to_fetch);
         __not_reach();
     }
 }

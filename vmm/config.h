@@ -14,9 +14,16 @@
 
 //#define DEBUG_TRACE
 //#define DEBUG_TRANSLATION
-
-#define NATIVE_DEBUGER
+//#define NATIVE_DEBUGER
 
 #define COLORED_OUTPUT
 
+
+/*
+ * initial logging level
+ * LOG_TRACE, LOG_DEBUG, LOG_INFO,LOG_WARN, LOG_ERROR, LOG_FATAL, LOG_UART
+ */
+
+
+#define LOGGING_LEVEL LOG_TRACE
 #endif

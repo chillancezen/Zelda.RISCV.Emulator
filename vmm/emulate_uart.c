@@ -2,6 +2,7 @@
  * Copyright (c) 2019 Jie Zheng
  */
 #include <pm_region.h>
+#include <log.h>
 
 #define UART_RX_BASE 0x10000000
 #define UART_TX_BASE 0x10000000
@@ -30,7 +31,8 @@ uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
     uart_buffer[uart_buffer_ptr++] = (uint8_t)value;
     if (uart_buffer_ptr == UART_BUFFER_SIZE || '\n' == (uint8_t)value) {
         uart_buffer[uart_buffer_ptr] = '\x0';
-        printf(ANSI_COLOR_CYAN"[uart]"ANSI_COLOR_RESET" %s", uart_buffer);
+        log_uart("%s", uart_buffer);
+        //printf(ANSI_COLOR_CYAN"[uart]"ANSI_COLOR_RESET" %s", uart_buffer);
         uart_buffer_ptr = 0x0;
     }
 }

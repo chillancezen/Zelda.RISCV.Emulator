@@ -8,7 +8,7 @@
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <log.h>
 int
 preload_image(void * addr, int64_t length, const char * image_path);
 
@@ -28,8 +28,7 @@ sign_extend32(uint32_t data, int sign_bit)
 }
 #define ASSERT(exp)                                                            \
     if (!(exp)) {                                                              \
-        printf(ANSI_COLOR_RED"[assert] %s:%d assertion:%s failed\n"ANSI_COLOR_RESET,\
-               __FILE__, __LINE__, #exp);                                      \
+        log_fatal("assertion:%s fails\n", #exp);                               \
         exit(-1);                                                              \
     }
 

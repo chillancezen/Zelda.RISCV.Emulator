@@ -79,8 +79,13 @@ flush_translation_cache(struct hart * hart_instance)
 {
     hart_instance->nr_translated_instructions = 0;
     hart_instance->translation_cache_ptr = 0;
+    #if defined(DEBUG_TRACE)
+        log_trace("flush translation cache hartid:%d\n",
+                  hart_instance->hart_id);
+    #endif
 }
 
+#if 0
 static int
 comparing_mapping_item(const void *a, const void * b)
 {
@@ -88,7 +93,12 @@ comparing_mapping_item(const void *a, const void * b)
     const struct program_counter_mapping_item * item_b = b;
     return item_a->guest_pc - item_b->guest_pc;
 }
-
+#else
+// MACRO is much more quicker
+    #define comparing_mapping_item(pa, pb)({                                   \
+        (int)((pa)->guest_pc - (pb)->guest_pc);                                \
+    })
+#endif
 // @return zero upon success, otherwise, non-zero is returned
 int
 add_translation_item(struct hart * hart_instance,

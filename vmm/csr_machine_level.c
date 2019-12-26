@@ -9,13 +9,14 @@ static void
 csr_mscratch_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    printf("mscratch write:%d\n", value);
+    log_trace("hart id:%d csr:mscratch write:0x%x\n",hartptr->hart_id, value);
 }
 
 static uint32_t
 csr_mscratch_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    printf("mscratch read:%d\n", csr->csr_blob);
+    log_trace("hart id:%d csr:mscratch read:0x%x\n", hartptr->hart_id,
+              csr->csr_blob);
     return csr->csr_blob;
 }
 

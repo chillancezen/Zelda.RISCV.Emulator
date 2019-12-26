@@ -243,7 +243,7 @@ vmresume(struct hart * hartptr)
     ASSERT(ti = search_translation_item(hartptr, hartptr->pc));
     
     #if defined(DEBUG_TRACE)
-        printf(ANSI_COLOR_GREEN"[vmresume]"ANSI_COLOR_RESET": 0x%x\n", hartptr->pc);
+        log_trace(ANSI_COLOR_MAGENTA"[trap out of translation cache]"ANSI_COLOR_RESET"\n");
     #endif
 
     __asm__ volatile("movq %%rax, %%r15;"
@@ -285,8 +285,8 @@ void
 trace_riscv_instruction(const char * instr_desc, uint32_t instrunction_address)
 {
     #if defined(DEBUG_TRACE)
-        printf(ANSI_COLOR_RED"[trace]"ANSI_COLOR_RESET" 0x%x %s\n",
-               instrunction_address, instr_desc);
+        log_trace("executing 0x%x %s\n",
+                  instrunction_address, instr_desc);
     #endif
 }
 

@@ -11,7 +11,6 @@
 #include <translation.h>
 #include <debug.h>
 
-
 static uint32_t bps[] = {
     //0x1001d8, 0x100238, 0x100204
 };

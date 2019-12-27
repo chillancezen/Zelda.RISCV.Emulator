@@ -35,7 +35,9 @@ riscv_sb_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "andl $0xff, %%edx;"
                      "movq %%r12, %%rdi;"
                      "movq $mmu_write8, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(sb_instruction)
                      :
@@ -84,7 +86,9 @@ riscv_sh_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "andl $0xffff, %%edx;"
                      "movq %%r12, %%rdi;"
                      "movq $mmu_write16, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(sh_instruction)
                      :
@@ -133,7 +137,9 @@ riscv_sw_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "movl (%%rdx), %%edx;"        // EDX: mmeory store source value
                      "movq %%r12, %%rdi;"
                      "movq $mmu_write32, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(sw_instruction)
                      :

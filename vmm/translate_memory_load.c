@@ -32,7 +32,9 @@ riscv_lb_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "addl %%edx, %%esi;" // ESI: the memory location
                      "movq %%r12, %%rdi;"
                      "movq $mmu_read8, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;" // EAX: the memory read from the location
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      "movl "PIC_PARAM(2)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
@@ -78,7 +80,9 @@ riscv_lbu_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "addl %%edx, %%esi;" // ESI: the memory location
                      "movq %%r12, %%rdi;"
                      "movq $mmu_read8, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;" // EAX: the memory read from the location
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      "movl "PIC_PARAM(2)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
@@ -130,7 +134,9 @@ riscv_lh_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "addl %%edx, %%esi;" // ESI: the memory location
                      "movq %%r12, %%rdi;"
                      "movq $mmu_read16, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;" // EAX: the memory read from the location
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      "movl "PIC_PARAM(2)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
@@ -176,7 +182,9 @@ riscv_lhu_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "addl %%edx, %%esi;" // ESI: the memory location
                      "movq %%r12, %%rdi;"
                      "movq $mmu_read16, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;" // EAX: the memory read from the location
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      "movl "PIC_PARAM(2)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"
@@ -228,7 +236,9 @@ riscv_lw_translator(struct decoding * dec, struct prefetch_blob * blob,
                      "addl %%edx, %%esi;" // ESI: the memory location
                      "movq %%r12, %%rdi;"
                      "movq $mmu_read32, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;" // EAX: the memory read from the location
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      "movl "PIC_PARAM(2)", %%edx;"
                      "shl $2, %%edx;"
                      "addq %%r15, %%rdx;"

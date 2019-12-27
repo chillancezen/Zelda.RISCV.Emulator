@@ -55,7 +55,9 @@ riscv_generic_csr_instructions_translator(struct decoding * dec,
     __asm__ volatile("movq %%r12, %%rdi;"
                      "movl "PIC_PARAM(0)", %%esi;"
                      "movq $riscv_generic_csr_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
                      "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(csr_instructions)

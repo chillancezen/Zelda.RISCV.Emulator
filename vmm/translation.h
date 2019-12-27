@@ -45,6 +45,17 @@ struct decoding {
 
 void
 vmresume(struct hart * hartptr);
+#define SAVE_GUEST_CONTEXT_SWITCH_REGS()                                       \
+        "pushq %%r15;"                                                         \
+        "pushq %%r14;"                                                         \
+        "pushq %%r13;"                                                         \
+        "pushq %%r12;"
+
+#define RESTORE_GUEST_CONTEXT_SWITCH_REGS()                                    \
+        "popq %%r12;"                                                          \
+        "popq %%r13;"                                                          \
+        "popq %%r14;"                                                          \
+        "popq %%r15;"
 
 // before entering translation cache, the RBX is set to the address of the hart
 // registers group
@@ -59,7 +70,9 @@ __asm__ volatile (#indicator  "_translation_begin:"                            \
                   "movq %%r12, %%rdi;"                                         \
                   "movq $1, %%rsi;"                                            \
                   "movq $enter_vmm_dbg_shell, %%rax;"                          \
+                  SAVE_GUEST_CONTEXT_SWITCH_REGS()                             \
                   "callq *%%rax;"                                              \
+                  RESTORE_GUEST_CONTEXT_SWITCH_REGS()                          \
                   :::"memory");
 
 #else
@@ -121,7 +134,9 @@ __asm__ volatile (#indicator  "_translation_end:\n")
                      "leaq 15f(%%rip), %%rdi;"                                 \
                      "movq 16f(%%rip), %%rsi;"                                 \
                      "movq $trace_riscv_instruction, %%rax;"                   \
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()                          \
                      "call *%%rax;"                                            \
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()                       \
                      "jmp "#indicator"_translation_end;"                       \
                      "15: .string \"" #indicator "\""
 #else
@@ -202,7 +217,9 @@ __attribute__((unused)) uint32_t indicator##_params[] = {                      \
         "leaq 15f(%%rip), %%rdi;"                                              \
         "movq 16f(%%rip), %%rsi;"                                              \
         "movq $trace_riscv_instruction, %%rax;"                                \
+        SAVE_GUEST_CONTEXT_SWITCH_REGS()                                       \
         "call *%%rax;"                                                         \
+        RESTORE_GUEST_CONTEXT_SWITCH_REGS()                                    \
         "movq $vmm_entry_point, %%rax;"                                        \
         "jmpq *%%rax;"                                                         \
         "15: .string \"" #indicator "\""

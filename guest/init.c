@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <printk.h>
 #include <unittest.h>
-
+#include <sha1.h>
 char * welcome = "Hello RISC-V\n";
 
 int
@@ -51,7 +51,10 @@ unsigned int count_decoded_length(const char *encoded) {
 void
 kernel_init(void)
 {
-    unit_test();
+    int idx0 = 0;
+    for (; idx0 < 1; idx0++) {
+        unit_test();
+    }
 #if 0
     int idx = 1;
     if (idx == 1) {
@@ -89,5 +92,23 @@ kernel_init(void)
     printk("hex: 0x%x\n", 0xffffffff);
     printk("char:%c\n", 'H');
     printk("string: %s\n", "Hello World");
+
+    int tmp_index = 0;
+    char string_to_hash[] = "Hello World. Hello Link";
+    for (; tmp_index < 2; tmp_index++)
+    {
+        char * index_tbl="0123456789abcdef";
+        char result[21];
+        char hex_result[41];
+        SHA1(result, string_to_hash, sizeof(string_to_hash) -1);
+        for (idx = 0; idx < 20; idx++) {
+            hex_result[idx * 2 + 1] = index_tbl[result[idx] & 0xf];
+            hex_result[idx * 2] = index_tbl[(result[idx] >> 4) & 0xf];
+        }
+        hex_result[40] = '\0';
+        printk("SHA1:%s\n", hex_result);
+        ((uint32_t *)string_to_hash)[0] += 1;
+
+    }
 }
 

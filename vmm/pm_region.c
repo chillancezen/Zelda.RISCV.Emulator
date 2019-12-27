@@ -21,6 +21,7 @@ pm_region_operation_compare(const struct pm_region_operation * pmr1,
         return 1;
     }
 
+#if BUILD_TYPE == BUILD_TYPE_DEBUG
     if ((pmr1->addr_low <= pmr2->addr_low &&
          pmr1->addr_high >= pmr2->addr_high) ||
         (pmr2->addr_low <= pmr1->addr_low &&
@@ -29,6 +30,9 @@ pm_region_operation_compare(const struct pm_region_operation * pmr1,
     }
     __not_reach();
     return 0;
+#else
+    return 0;
+#endif
 }
 
 

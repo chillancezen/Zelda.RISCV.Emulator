@@ -15,7 +15,9 @@ riscv_fence_i_translator(struct decoding * dec, struct prefetch_blob * blob,
     BEGIN_TRANSLATION(fence_i_instruction);
         __asm__ volatile("movq %%r12, %%rdi;"
                          "movq $flush_translation_cache, %%rax;"
+                         SAVE_GUEST_CONTEXT_SWITCH_REGS()
                          "call *%%rax;"
+                         RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          TRAP_TO_VMM(fence_i_instruction)
                          :

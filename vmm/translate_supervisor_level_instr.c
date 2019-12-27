@@ -24,7 +24,9 @@ riscv_ebreak_translator(struct decoding * dec, struct prefetch_blob * blob,
     BEGIN_TRANSLATION(ebreak_instruction);
         __asm__ volatile("movq %%r12, %%rdi;"
                          "movq $ebreak_callback, %%rax;"
+                         SAVE_GUEST_CONTEXT_SWITCH_REGS()
                          "call *%%rax;"
+                         RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                          PROCEED_TO_NEXT_INSTRUCTION()
                          END_INSTRUCTION(ebreak_instruction)
                          :

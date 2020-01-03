@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <hart.h>
 #include <sys/queue.h>
+
+#define WPRI_MASK_ALL 0xffffffff
+
 struct csr_entry {
     uint32_t is_valid:1;
     uint32_t csr_blob;

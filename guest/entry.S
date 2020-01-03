@@ -97,7 +97,20 @@ guest_kernel_entry:
 
     li a0, 0x12345
     csrw mscratch, a0
-    //ebreak
+    csrrw a1, mscratch, a0
+    csrrwi a2, mscratch, 23
+    csrrwi zero, mscratch, 24
+    li a3, 0x1
+    csrrs a1, mscratch, a3
+
+    li a1, 0x19
+    csrrc a1, mscratch, a1
+
+    csrrw a3, misa, zero
+    li a4, 1
+    csrrw a4, mvendorid, a4
+    csrrw zero, mvendorid, a6
+    ebreak
     j 1f
 1:
     wfi

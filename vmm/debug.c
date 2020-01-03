@@ -24,6 +24,7 @@ print_hint(struct hart * hartptr)
 struct cmd_registery_item {
     char * cmd_prefixs[MAX_CMD_TOKEN_PREFIX];
     int (*func)(struct hart * hartptr, int argc, char *argv[]);
+    char * desc;
 };
 
 
@@ -32,6 +33,15 @@ dump_registers_info(struct hart * hartptr, int argc, char *argv[])
 {
     printf(ANSI_COLOR_MAGENTA"[breakpoint at 0x%x]:\n", hartptr->pc);
     dump_hart(hartptr);
+    printf(ANSI_COLOR_RESET);
+    return ACTION_CONTINUE;
+}
+
+static int
+dump_translation(struct hart * hartptr, int argc, char *argv[])
+{
+    printf(ANSI_COLOR_MAGENTA);
+    dump_translation_cache(hartptr);
     printf(ANSI_COLOR_RESET);
     return ACTION_CONTINUE;
 }
@@ -46,43 +56,64 @@ dump_breakpoints_info(struct hart * hartptr, int argc, char *argv[])
 static int
 debug_continue(struct hart * hartptr, int argc, char *argv[])
 {
-
     return ACTION_STOP;
 }
 
+static int
+debug_help(struct hart * hartptr, int argc, char *argv[]);
+
 static struct cmd_registery_item cmds_items[] = {
     {
-        .cmd_prefixs = {
-            "info",
-            "registers",
-            NULL
-        },
-        .func = dump_registers_info
+        .cmd_prefixs = {"info", "registers", NULL},
+        .func = dump_registers_info,
+        .desc = "dump the registers of a hart"
     },
     {
-        .cmd_prefixs = {
-            "info",
-            "breakpoints",
-            NULL
-        },
-        .func = dump_breakpoints_info
+        .cmd_prefixs = {"info", "translation", NULL},
+        .func = dump_translation ,
+        .desc = "dump the items in translation cache"
     },
     {
-        .cmd_prefixs = {
-            "continue",
-            NULL
-        },
-        .func = debug_continue 
+        .cmd_prefixs = {"info", "breakpoints", NULL},
+        .func = dump_breakpoints_info,
+        .desc = "dump all the breakpoints"
     },
     {
-        .cmd_prefixs = {
-            "break",
-            NULL
-        },
-        .func = add_breakpoint_command
+        .cmd_prefixs = {"continue", NULL},
+        .func = debug_continue,
+        .desc = "continue to execute util it reaches next breakpoint"
+    },
+    {
+        .cmd_prefixs = {"break", NULL},
+        .func = add_breakpoint_command,
+        .desc = "add a break by following the address of the target address"
+    },
+    {
+        .cmd_prefixs = {"help", NULL},
+        .func = debug_help,
+        .desc = "display all the supported commands"
     }
 };
 
+static int
+debug_help(struct hart * hartptr, int argc, char *argv[])
+{
+    printf("supported commands:\n");
+    int idx = 0;
+    for (; idx < sizeof(cmds_items)/sizeof(cmds_items[0]); idx++) {
+        int idx_tmp = 0;
+        printf("\t"ANSI_COLOR_MAGENTA);
+        for(;cmds_items[idx].cmd_prefixs[idx_tmp]; idx_tmp++) {
+            printf("%s ", cmds_items[idx].cmd_prefixs[idx_tmp]);
+        }
+        if (cmds_items[idx].desc) {
+            printf(ANSI_COLOR_RESET" %s", cmds_items[idx].desc);
+        }
+        printf(ANSI_COLOR_RESET);
+        printf("\n");
+    }
+    return ACTION_CONTINUE;
+}
 static int nr_cmds_items = sizeof(cmds_items) / sizeof(cmds_items[0]);
 
 static int
@@ -125,6 +156,7 @@ process_cmds_tokens(struct hart * hartptr, int argc, char *argv[])
         return item_found->func(hartptr, argc - lpm_counter, argv + lpm_counter);
     } else {
         // NO ACTION taken
+        printf(ANSI_COLOR_RED"No action\n"ANSI_COLOR_RESET);
     }
     return ACTION_CONTINUE;
 }

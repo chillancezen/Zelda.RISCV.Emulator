@@ -31,6 +31,9 @@ csr_registery_init(struct hart * hartptr)
         csr->write = ptr->csr_registery.write;
         csr->read = ptr->csr_registery.read;
         csr->reset = ptr->csr_registery.reset;
+        if (csr->reset) {
+            csr->reset(hartptr, csr);
+        }
     }
 
 }
@@ -181,7 +184,14 @@ dump_hart(struct hart * hartptr)
             printf("\n");
         }
     }
-    printf("\tThere are %d items in translation cache:\n",
+}
+
+
+void
+dump_translation_cache(struct hart *hartptr)
+{
+    int index = 0;
+    printf("hart:%d has %d items in translation cache:\n", hartptr->hart_id,
            hartptr->nr_translated_instructions);
     struct program_counter_mapping_item * items = hartptr->pc_mappings;
     for (index = 0; index < hartptr->nr_translated_instructions; index++) {

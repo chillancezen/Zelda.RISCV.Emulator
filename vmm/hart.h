@@ -121,4 +121,7 @@ search_translation_item(struct hart * hart_instance,
 void
 dump_hart(struct hart * hartptr);
 
+void
+dump_translation_cache(struct hart *hartptr);
+
 #endif

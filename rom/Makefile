@@ -10,9 +10,9 @@ ASPARAMS = -m64 -mno-red-zone
 CCPARAMS = -O0 -g3 -ffreestanding -mno-fdiv -march=rv32imafd -mabi=ilp32 -nostdlib -fno-builtin -fno-exceptions -Werror -Wall -Wstrict-prototypes
 LDPARAMS = -m elf32lriscv -static
 
-GUEST_ELF = guest.rv32.elf
-GUEST_IMG = guest.rv32.img
-GUEST_MAP = guest.rv32.map
+ROM_ELF = rom.rv32.elf
+ROM_IMG = rom.rv32.img
+ROM_MAP = rom.rv32.map
 
 CROSS_COMPILE = riscv32-unknown-elf-
 %.o: %.S
@@ -23,17 +23,17 @@ CROSS_COMPILE = riscv32-unknown-elf-
 	@echo "[CC] $<"
 	@$(CROSS_COMPILE)gcc $(CCPARAMS) -I. -g -Wa,-adhls -o $@ -c $< > $@.plain
 
-$(GUEST_IMG):$(GUEST_ELF)
+$(ROM_IMG):$(ROM_ELF)
 	@echo "[CT] $@"
 	@cp $< $@
 	@$(CROSS_COMPILE)objcopy  $@ -O binary
 
-$(GUEST_ELF):$(AS_OBJS) $(C_OBJS)
+$(ROM_ELF):$(AS_OBJS) $(C_OBJS)
 	@echo "[LD] $@"
-	@$(CROSS_COMPILE)ld $(LDPARAMS) -Map=$(GUEST_MAP) -T linker.ld -o $(GUEST_ELF) $(AS_OBJS) $(C_OBJS)
+	@$(CROSS_COMPILE)ld $(LDPARAMS) -Map=$(ROM_MAP) -T linker.ld -o $(ROM_ELF) $(AS_OBJS) $(C_OBJS)
 
 clean:
-	@echo "[Cleaning] guest"
-	@rm -f *.o $(GUEST_ELF) $(GUEST_IMG) $(GUEST_MAP)
+	@echo "[Cleaning] rom"
+	@rm -f *.o $(ROM_ELF) $(ROM_IMG) $(ROM_MAP)
 	@rm -f *.o.plain
 

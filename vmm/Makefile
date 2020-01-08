@@ -30,7 +30,7 @@ clean:
 	@echo "[Cleaning] $(GUEST_ELF)"
 	@rm -f *.o $(GUEST_ELF) $(GUEST_IMG) $(GUEST_MAP)
 run:$(GUEST_ELF)
-	@./$(GUEST_ELF) ../guest/guest.rv32.img
+	@./$(GUEST_ELF) ../rom/rom.rv32.img
 
 debug:$(GUEST_ELF)
-	@gdb ./$(GUEST_ELF) ../guest/guest.rv32.img
+	@gdb ./$(GUEST_ELF) ../rom/rom.rv32.img

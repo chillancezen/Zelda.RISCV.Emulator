@@ -19,7 +19,7 @@ int main(int argc, char ** argv)
     struct virtual_machine_spec spec = {
         .nr_harts = 2,
         .pmem_size_in_mega = 64,
-        .image_path = "../guest/guest.rv32.img",
+        .image_path = "../rom/rom.rv32.img",
         .image_load_offset = 0x100000,
         .entry_point = 0x100000
     };

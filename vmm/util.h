@@ -9,8 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <log.h>
-int
-preload_image(void * addr, int64_t length, const char * image_path);
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

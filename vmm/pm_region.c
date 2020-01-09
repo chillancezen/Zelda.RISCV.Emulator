@@ -2,12 +2,23 @@
  * Copyright (c) 2019 Jie Zheng
  */
 #include <pm_region.h>
+#include <util.h>
 
 // XXX: Define MMIO operations globally on a per-vm basis. for simpicity purpose
 // I don't put it in a VM's blob.
 static struct pm_region_operation  pmr_ops[MAX_NR_PM_REGIONS];
 static int nr_pmr_ops = 0;
 
+void
+dump_memory_regions(void)
+{
+    int idx = 0;
+    log_info("dump memory layout\n");
+    for(idx = 0; idx < nr_pmr_ops; idx++) {
+        log_info("\t[0x%08x - 0x%08x] %s\n", pmr_ops[idx].addr_low,
+                 pmr_ops[idx].addr_high, pmr_ops[idx].pmr_desc);
+    }
+}
 int
 pm_region_operation_compare(const struct pm_region_operation * pmr1,
                             const struct pm_region_operation * pmr2)
@@ -43,8 +54,15 @@ search_pm_region_callback(uint64_t guest_pa)
         .addr_low = guest_pa,
         .addr_high = guest_pa + 1
     };
-    return SEARCH(struct pm_region_operation, pmr_ops, nr_pmr_ops,
-                  pm_region_operation_compare, &target) ;
+    struct pm_region_operation * rc;
+    rc = SEARCH(struct pm_region_operation, pmr_ops, nr_pmr_ops,
+                pm_region_operation_compare, &target);
+    #if BUILD_TYPE == BUILD_TYPE_DEBUG
+    if (!rc) {
+        log_debug("can not find a memory for address: 0x%x\n", guest_pa);
+    }
+    #endif
+    return rc;
 }
 
 void

@@ -33,4 +33,6 @@ register_pm_region_operation(const struct pm_region_operation * pro);
 struct pm_region_operation *
 search_pm_region_callback(uint64_t guest_pa);
 
+void
+dump_memory_regions(void);
 #endif

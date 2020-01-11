@@ -40,7 +40,7 @@ static struct {
 
 __attribute__((unused))
 static const char *level_names[] = {
-  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "UART"
+  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "UART16550"
 };
 
 #ifdef LOG_USE_COLOR

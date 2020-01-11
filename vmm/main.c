@@ -12,10 +12,6 @@
 #include <debug.h>
 #include <ini.h>
 
-static uint32_t bps[] = {
-    //0x1001d8, 0x100238, 0x100204
-};
-
 
 static int
 get_vm_spec(struct virtual_machine_spec * spec, ini_t * ini_config)
@@ -80,6 +76,17 @@ get_vm_spec(struct virtual_machine_spec * spec, ini_t * ini_config)
     spec->main_mem_size_in_mega = strtol(main_memory_size_in_mega, NULL, 10);
     log_info("main memory size in MB: %d\n", spec->main_mem_size_in_mega);
 
+    // initial breakpoints
+    // XXX: this is going to damage the ini_config, put it at last section.
+    char * breakpoints = (char *)ini_get(ini_config, "debug", "breakpoints");
+    char delimiter[] = " ";
+    if (breakpoints) {
+        char * bp = strtok(breakpoints, delimiter);
+        while (bp) {
+            add_breakpoint(strtol(bp, NULL, 16));
+            bp = strtok(NULL, delimiter);
+        }
+    }
     return 0;
 }
 
@@ -102,10 +109,6 @@ int main(int argc, char ** argv)
     struct virtual_machine vm0;
     virtual_machine_init(&vm0, &spec);
 
-    int idx = 0;
-    for (; idx < sizeof(bps)/sizeof(bps[0]); idx++) {
-        add_breakpoint(bps[idx]);
-    }
     vmresume(hart_by_id(&vm0, vm0.boot_hart));
     __asm__ volatile(".byte 0xcc;");
     return 0;

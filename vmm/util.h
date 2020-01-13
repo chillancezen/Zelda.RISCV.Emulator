@@ -13,6 +13,17 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+#define LITTLE_ENDIAN32(v) ((((v) & 0xff) << 24) |                             \
+                            (((v) & 0xff00) << 8) |                            \
+                            (((v) & 0xff0000) >> 8) |                          \
+                            (((v) & 0xff000000) >> 24))
+
+#define BIG_ENDIAN32(v) LITTLE_ENDIAN32(v)
+
+
+#define ALIGN4(addr)                                                           \
+    ((void *)((((uint64_t)(addr)) & 0x3) ? ((((uint64_t)(addr)) & ~0x3) + 4) : (uint64_t)(addr)))
+
 static inline int32_t
 sign_extend32(uint32_t data, int sign_bit)
 {
@@ -34,7 +45,7 @@ sign_extend32(uint32_t data, int sign_bit)
 #define __not_reach()                                                          \
     ASSERT(__NOT_REACH)
 
-
+#define __not_used __attribute__((unused))
 #define BREAKPOINT()                                                           \
     __asm__ volatile(".byte 0xcc")
 

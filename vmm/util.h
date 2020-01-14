@@ -21,8 +21,13 @@
 #define BIG_ENDIAN32(v) LITTLE_ENDIAN32(v)
 
 
-#define ALIGN4(addr)                                                           \
-    ((void *)((((uint64_t)(addr)) & 0x3) ? ((((uint64_t)(addr)) & ~0x3) + 4) : (uint64_t)(addr)))
+#define ALIGNADDR(addr, align)                                                 \
+    ((void *)((((uint64_t)(addr)) & (align - 1)) ? ((((uint64_t)(addr)) & ~(align - 1)) + align) : (uint64_t)(addr)))
+
+#define ALIGNINT(var, align, size)                                             \
+    ((size)((((size)(var)) & (align - 1)) ? ((((size)(var)) & ~(align - 1)) + align) : (size)(var)))
+
+#define ALIGN32(var, align) ALIGNINT(var, align, uint32_t)
 
 static inline int32_t
 sign_extend32(uint32_t data, int sign_bit)

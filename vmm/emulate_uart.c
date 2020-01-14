@@ -3,6 +3,7 @@
  */
 #include <pm_region.h>
 #include <log.h>
+#include <fdt.h>
 
 #define UART_16550_BASE 0x10000000
 
@@ -70,12 +71,28 @@ uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
             break;
     }
 }
+
+void
+build_uart_fdt_node(struct fdt_build_blob * blob)
+{
+    char node_name[64];
+    sprintf(node_name, "uart@%x", UART_16550_BASE);
+    fdt_begin_node(blob, node_name);
+    uint32_t clock_frequency = BIG_ENDIAN32(0x00384000);
+    fdt_prop(blob, "clock-frequency", 4, &clock_frequency);
+    fdt_prop(blob, "compatible", strlen("ns16550a") + 1, "ns16550a");
+    uint32_t regs[4] = {BIG_ENDIAN32(0), BIG_ENDIAN32(UART_16550_BASE),
+                        BIG_ENDIAN32(0), BIG_ENDIAN32(0x100)};
+    fdt_prop(blob, "reg", 16, regs);
+    fdt_end_node(blob);
+}
+
 void
 uart_init(void)
 {
     struct pm_region_operation uart_mmio_region = {
         .addr_low = UART_16550_BASE,
-        .addr_high = UART_16550_BASE + 0x1000,
+        .addr_high = UART_16550_BASE + 0x100,
         .pmr_read = uart_mmio_read,
         .pmr_write = uart_mmio_write,
         .pmr_desc = "uart.mmio"

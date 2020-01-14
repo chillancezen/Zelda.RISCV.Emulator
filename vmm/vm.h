@@ -8,6 +8,7 @@
 #include <hart.h>
 #include <physical_memory.h>
 #include <util.h>
+#include <fdt.h>
 
 struct virtual_machine {
 
@@ -18,6 +19,10 @@ struct virtual_machine {
     int64_t main_mem_size;
     int64_t main_mem_base;
     void * main_mem_host_base;
+
+
+    // the build buffer of FDT
+    struct fdt_build_blob fdt;
 };
 
 __attribute__((always_inline))

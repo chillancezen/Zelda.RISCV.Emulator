@@ -33,4 +33,55 @@ struct fdt_property {
     uint32_t nameoff;
 }__attribute__((packed));
 
+
+struct fdt_build_blob {
+    uint8_t * buffer;
+    uint32_t buffer_size;
+    uint32_t buffer_iptr;
+
+    uint8_t * string_buffer;
+    uint32_t string_buffer_size;
+    uint32_t string_buffer_iptr;
+};
+
+
+void
+fdt_build_init(struct fdt_build_blob * blob, int buffer_size,
+               int string_buffer_size);
+
+
+void
+fdt_begin_node(struct fdt_build_blob * blob, const char * node_name);
+
+void
+fdt_prop(struct fdt_build_blob * blob, const char * prop_name,
+         uint32_t prop_len, void * prop_value);
+
+void
+fdt_end_node(struct fdt_build_blob * blob);
+
+
+void
+fdt_nop(struct fdt_build_blob * blob);
+
+
+void
+fdt_end(struct fdt_build_blob * blob);
+
+
+void
+fdt_blob_destroy(struct fdt_build_blob * blob);
+
+
+void
+build_device_tree(struct fdt_build_blob * blob);
+
+void
+dump_fdt(uint8_t * dtb, int size);
+
+
+// DEVICES FDT BUILD ROUTINES
+void
+build_uart_fdt_node(struct fdt_build_blob * blob);
+
 #endif

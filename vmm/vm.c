@@ -120,6 +120,7 @@ virtual_machine_init(struct virtual_machine * vm,
     vm->main_mem_host_base = preallocate_physical_memory(vm->main_mem_size);
     ASSERT(vm->main_mem_host_base);
     
+
     vm->nr_harts = spec->nr_harts;
     vm->boot_hart = spec->boot_cpu;
     vm->harts = aligned_alloc(64, vm->nr_harts * sizeof(struct hart));
@@ -132,6 +133,8 @@ virtual_machine_init(struct virtual_machine * vm,
         hart_ptr->vmptr = vm;
     }
 
+    // build the device tree
+    build_device_tree(&vm->fdt);
     ASSERT(!preload_binary_image(vm->main_mem_host_base + spec->image_load_base - vm->main_mem_base,
                                  vm->main_mem_size, spec->image_path));
     memory_init(vm);

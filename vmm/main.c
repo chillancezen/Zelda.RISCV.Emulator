@@ -17,6 +17,7 @@ static int
 get_vm_spec(struct virtual_machine_spec * spec, ini_t * ini_config)
 {
     memset(spec, 0x0, sizeof(struct virtual_machine_spec));
+    spec->ini_config = ini_config;
     // number of harts
     const char * nr_harts = ini_get(ini_config, "cpu", "nr_cpus");
     ASSERT(nr_harts);

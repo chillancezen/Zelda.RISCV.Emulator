@@ -9,6 +9,7 @@
 #include <physical_memory.h>
 #include <util.h>
 #include <fdt.h>
+#include <ini.h>
 
 struct virtual_machine {
 
@@ -16,13 +17,20 @@ struct virtual_machine {
     int boot_hart;
     struct hart * harts;
     
+    // main memory
     int64_t main_mem_size;
     int64_t main_mem_base;
     void * main_mem_host_base;
-
+    
+    // bootrom
+    int64_t bootrom_size;
+    int64_t bootrom_base;
+    void * bootrom_host_base;
 
     // the build buffer of FDT
     struct fdt_build_blob fdt;
+
+    ini_t * ini_config;
 };
 
 __attribute__((always_inline))
@@ -53,11 +61,17 @@ struct virtual_machine_spec {
     char * image_path;
     uint32_t entry_point;
     uint32_t image_load_base;
+
+    //[MISC]
+    ini_t * ini_config;
 };
 
 void
 virtual_machine_init(struct virtual_machine * vm,
                      const struct virtual_machine_spec * spec);
+
+void
+bootrom_init(struct virtual_machine * vm);
 
 void
 uart_init(void);

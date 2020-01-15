@@ -115,6 +115,11 @@ virtual_machine_init(struct virtual_machine * vm,
     int idx = 0;
     struct hart * hart_ptr;
     memset(vm, 0x0, sizeof(struct virtual_machine));
+    // nothing can precede ini configuration
+    vm->ini_config = spec->ini_config;
+
+    bootrom_init(vm);
+
     vm->main_mem_base = spec->main_mem_base;
     vm->main_mem_size = MEGA(spec->main_mem_size_in_mega);
     vm->main_mem_host_base = preallocate_physical_memory(vm->main_mem_size);
@@ -133,7 +138,6 @@ virtual_machine_init(struct virtual_machine * vm,
         hart_ptr->vmptr = vm;
     }
 
-    // build the device tree
     build_device_tree(&vm->fdt);
     ASSERT(!preload_binary_image(vm->main_mem_host_base + spec->image_load_base - vm->main_mem_base,
                                  vm->main_mem_size, spec->image_path));
@@ -141,5 +145,8 @@ virtual_machine_init(struct virtual_machine * vm,
     device_init(vm);
 
     dump_memory_regions();
+
+    // build the device tree
+    build_device_tree(&vm->fdt);
 }
 

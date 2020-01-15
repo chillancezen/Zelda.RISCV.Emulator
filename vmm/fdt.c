@@ -8,6 +8,7 @@
 #include<fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vm.h>
 
 void
 fdt_build_init(struct fdt_build_blob * blob, int buffer_size,
@@ -139,9 +140,9 @@ fdt_blob_destroy(struct fdt_build_blob * blob)
     memset(blob, 0, sizeof(struct fdt_build_blob));
 }
 
-void
+static void
 dump_device_tree_to_file(struct fdt_build_blob * blob,
-                         char * dtb_path)
+                         const char * dtb_path)
 {
     int fd = open(dtb_path, O_CREAT | O_WRONLY);
 
@@ -160,6 +161,93 @@ dump_device_tree_to_file(struct fdt_build_blob * blob,
     close(fd);
 }
 
+static void
+build_memory_fdt_node(struct fdt_build_blob *blob)
+{
+    struct virtual_machine * vm =
+        CONTAINER_OF(blob, struct virtual_machine, fdt);
+    char name[64];
+    sprintf(name, "memory@%x", (uint32_t)vm->main_mem_base);
+    fdt_begin_node(blob, name);
+    fdt_prop(blob, "device_type", strlen("memory") + 1, "memory");
+    uint32_t regs[4] = {
+        0, BIG_ENDIAN32(vm->main_mem_base),
+        0, BIG_ENDIAN32(vm->main_mem_size)
+    };
+    fdt_prop(blob, "reg", 16, regs);
+    fdt_end_node(blob);
+}
+
+static void
+build_bootrom_fdt_node(struct fdt_build_blob * blob)
+{
+    struct virtual_machine * vm =
+        CONTAINER_OF(blob, struct virtual_machine, fdt);
+    const char * rom_start_string = ini_get(vm->ini_config, "rom", "rom_start");
+    const char * rom_size_string = ini_get(vm->ini_config, "rom", "rom_size");
+    ASSERT(rom_start_string);
+    ASSERT(rom_size_string);
+    uint32_t rom_start = strtol(rom_start_string, NULL, 16);
+    uint32_t rom_size = strtol(rom_size_string, NULL, 16);
+    char name[64];
+    sprintf(name, "bootrom@%x", rom_start);
+    fdt_begin_node(blob, name);
+    fdt_prop(blob, "device_type", strlen("bootrom") + 1, "bootrom");
+    fdt_prop(blob, "compatible", strlen("zelda 16MB flash") + 1,
+             "zelda 16MB flash");
+    uint32_t regs[4] = {
+        0, BIG_ENDIAN32(rom_start),
+        0, BIG_ENDIAN32(rom_size)
+    };
+    fdt_prop(blob, "reg", 16, regs);
+    fdt_end_node(blob);
+}
+
+static void
+build_cpu_fdt_node(struct fdt_build_blob * blob)
+{
+    struct hart * hart_ptr;
+    int idx = 0;
+    struct virtual_machine * vm =
+        CONTAINER_OF(blob, struct virtual_machine, fdt);
+    char name[64];
+    fdt_begin_node(blob, "cpus");
+    uint32_t address_cells = BIG_ENDIAN32(1);
+    uint32_t size_cells = 0;
+    uint32_t timebase_frequency = BIG_ENDIAN32(0x989680);
+    fdt_prop(blob, "#address-cells", 4, &address_cells);
+    fdt_prop(blob, "#size_cells", 4, &size_cells);
+    fdt_prop(blob, "timebase-frequency", 4, &timebase_frequency);
+    fdt_begin_node(blob, "cpu-map");
+    fdt_begin_node(blob, "cluster0");
+    for (idx = 0; idx < vm->nr_harts; idx++) {
+        hart_ptr = hart_by_id(vm, idx);
+        sprintf(name, "core%d", hart_ptr->hart_id);
+        fdt_begin_node(blob, name);
+        uint32_t cpu_phandle = BIG_ENDIAN32(idx);
+        fdt_prop(blob, "cpu", 4, &cpu_phandle);
+        fdt_end_node(blob);
+    }
+    fdt_end_node(blob);
+    fdt_end_node(blob);
+    
+    for (idx = 0; idx < vm->nr_harts; idx++) {
+        hart_ptr = hart_by_id(vm, idx);
+        sprintf(name, "cpu@%d", hart_ptr->hart_id);
+        fdt_begin_node(blob, name);
+        uint32_t cpu_phandle = BIG_ENDIAN32(idx);
+        fdt_prop(blob, "phandle", 4, &cpu_phandle);
+        fdt_prop(blob, "device_type", strlen("cpu") + 1, "cpu");
+        fdt_prop(blob, "status", strlen("okay") + 1, "okay");
+        fdt_prop(blob, "compatible", strlen("riscv") + 1, "riscv");
+        fdt_prop(blob, "riscv,isa", strlen("rv32ima") + 1, "rv32ima");
+        fdt_prop(blob, "mmu-type", strlen("riscv,sv32") + 1, "riscv,sv32");
+        uint32_t hartid = BIG_ENDIAN32(hart_ptr->hart_id);
+        fdt_prop(blob, "reg", 4, &hartid);
+        fdt_end_node(blob);
+    }
+    fdt_end_node(blob);
+}
 
 void
 build_device_tree(struct fdt_build_blob * blob)
@@ -173,10 +261,22 @@ build_device_tree(struct fdt_build_blob * blob)
     fdt_prop(blob, "compatible", strlen("riscv-virtio") + 1, "riscv-virtio");
     fdt_prop(blob, "model", strlen("riscv-virtio,qemu") + 1, "riscv-virtio,qemu");
 
+    build_bootrom_fdt_node(blob);
     build_uart_fdt_node(blob);
+    build_memory_fdt_node(blob);
+    build_cpu_fdt_node(blob);
     fdt_end_node(blob);
     fdt_end(blob);
-    dump_device_tree_to_file(blob, "/root/workspace/diskimage/zelda.dtb");
+
+    {
+        // dump dtb to file if we want
+        struct virtual_machine * vm =
+            CONTAINER_OF(blob, struct virtual_machine, fdt);
+        const char * dump_dtb = ini_get(vm->ini_config, "misc", "dump_dtb");
+        if (dump_dtb) {
+            dump_device_tree_to_file(blob, dump_dtb);
+        }
+    }
 }
 
 void

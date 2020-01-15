@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <log.h>
 
+#define OFFSET_OF(structure, field) ((int64_t)(&(((structure *)0)->field)))
+#define CONTAINER_OF(ptr, structure, field)                                    \
+    (structure *)(((uint64_t)(ptr)) - OFFSET_OF(structure, field))
+
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 

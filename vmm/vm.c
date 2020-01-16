@@ -81,33 +81,6 @@ device_init(struct virtual_machine * vm)
     uart_init();
 }
 
-static int
-preload_binary_image(void * addr, int64_t length, const char * image_path)
-{
-    int fd = open(image_path, O_RDONLY);
-    if (fd < 0) {
-        return fd;
-    }
-    int nr_image_length = lseek(fd, 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
-    int nr_left = nr_image_length;
-    int nr_read = 0;
-    while (nr_left > 0) {
-        int nr_to_read = MIN(nr_left, length - nr_read);
-        if (!nr_to_read) {
-            break;
-        }
-        int tmp = read(fd, addr + nr_read, nr_to_read);
-        if (tmp <= 0) {
-            break;
-        }
-        nr_left -= tmp;
-        nr_read += tmp;
-    }
-    close(fd);
-    return !(nr_left == 0);
-}
-
 void
 virtual_machine_init(struct virtual_machine * vm,
                      const struct virtual_machine_spec * spec)
@@ -134,11 +107,10 @@ virtual_machine_init(struct virtual_machine * vm,
     for (idx = 0; idx < vm->nr_harts; idx++) {
         hart_ptr = hart_by_id(vm, idx);
         hart_init(hart_ptr, idx);
-        hart_ptr->pc = spec->entry_point;
+        hart_ptr->pc = 0x4000;
         hart_ptr->vmptr = vm;
     }
 
-    build_device_tree(&vm->fdt);
     ASSERT(!preload_binary_image(vm->main_mem_host_base + spec->image_load_base - vm->main_mem_base,
                                  vm->main_mem_size, spec->image_path));
     memory_init(vm);

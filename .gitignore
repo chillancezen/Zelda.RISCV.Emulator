@@ -54,10 +54,12 @@ dkms.conf
 *.bin
 *.iso
 *.map
+*.o.plain
+*.img
 *.qcow2
 Zelda.drive
 !runtime/libc/*
 qemu.log
-
+zelda.dtb
 guest/guest.rv32.img
-vmm/vmm64
+vmm/vmx

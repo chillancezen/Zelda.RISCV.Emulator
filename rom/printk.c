@@ -1,5 +1,9 @@
+/*
+ * Copyright (c) 2019-2020 Jie Zheng
+ */
 #include <stdarg.h>
 #include <printk.h>
+#include <uart.h>
 
 #define UART_TX_BASE 0x10000000
 
@@ -8,11 +12,10 @@
 static void
 uart_put_char(uint8_t value)
 {
-    *(uint8_t *)UART_TX_BASE = value;
+     uart16550_putchar(value);
 }
 
 #define EBREAK() __asm__ volatile("ebreak;":::"memory")
-// XXX: for 64-bit Integer resolution
 static void
 resolve_int32(int32_t qword)
 {
@@ -23,9 +26,7 @@ resolve_int32(int32_t qword)
         return;   
     }
     while (qword && iptr < DEFAULT_RESOLVE_STACK) {
-        //EBREAK();
         mod = qword % 10;
-        //EBREAK();
         stack[iptr++] = '0' + mod;
         qword /= 10;
     }

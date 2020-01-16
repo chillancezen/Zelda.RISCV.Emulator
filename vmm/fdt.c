@@ -250,7 +250,7 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
 }
 
 void
-build_device_tree(struct fdt_build_blob * blob)
+fdt_init(struct fdt_build_blob * blob)
 {
     fdt_build_init(blob, 4096, 512);
     fdt_begin_node(blob, ""); // the root node
@@ -268,15 +268,16 @@ build_device_tree(struct fdt_build_blob * blob)
     fdt_end_node(blob);
     fdt_end(blob);
 
-    {
-        // dump dtb to file if we want
-        struct virtual_machine * vm =
-            CONTAINER_OF(blob, struct virtual_machine, fdt);
-        const char * dump_dtb = ini_get(vm->ini_config, "misc", "dump_dtb");
-        if (dump_dtb) {
-            dump_device_tree_to_file(blob, dump_dtb);
-        }
+    struct virtual_machine * vm = CONTAINER_OF(blob, struct virtual_machine, fdt);
+    // dump dtb to file if we want
+    const char * dump_dtb = ini_get(vm->ini_config, "misc", "dump_dtb");
+    if (dump_dtb) {
+        dump_device_tree_to_file(blob, dump_dtb);
     }
+    
+    // Load the dtb into the very beginning of rom
+    ASSERT(blob->buffer_iptr < (4096 * 3));
+    ASSERT(memcpy(vm->bootrom_host_base, blob->buffer, blob->buffer_iptr));
 }
 
 void

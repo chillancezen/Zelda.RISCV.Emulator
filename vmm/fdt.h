@@ -74,7 +74,7 @@ fdt_blob_destroy(struct fdt_build_blob * blob);
 
 
 void
-build_device_tree(struct fdt_build_blob * blob);
+fdt_init(struct fdt_build_blob * blob);
 
 void
 dump_fdt(uint8_t * dtb, int size);

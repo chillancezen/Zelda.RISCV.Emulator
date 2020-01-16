@@ -30,6 +30,7 @@ struct virtual_machine {
     // the build buffer of FDT
     struct fdt_build_blob fdt;
 
+    // the ini conifguration
     ini_t * ini_config;
 };
 
@@ -47,31 +48,14 @@ hart_by_id(struct virtual_machine * vm, int hart_id)
 #define IMAGE_TYPE_BINARY 0x1
 #define IMAGE_TYPE_ELF 0x2
 
-struct virtual_machine_spec {
-    // [CPU]
-    int nr_harts;
-    int boot_cpu; // default is 0th
-    
-    // [MEM]
-    uint32_t main_mem_base;
-    int main_mem_size_in_mega;
-
-    // [IMAGE]
-    int image_type;
-    char * image_path;
-    uint32_t entry_point;
-    uint32_t image_load_base;
-
-    //[MISC]
-    ini_t * ini_config;
-};
-
 void
-virtual_machine_init(struct virtual_machine * vm,
-                     const struct virtual_machine_spec * spec);
+virtual_machine_init(struct virtual_machine * vm, ini_t *);
 
 void
 bootrom_init(struct virtual_machine * vm);
+
+void
+ram_init(struct virtual_machine * vm);
 
 void
 uart_init(void);

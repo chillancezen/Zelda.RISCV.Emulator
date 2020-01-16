@@ -81,11 +81,11 @@ bootrom_init(struct virtual_machine * vm)
 
     // load the rom image to 0x4000.
     const char * rom_image = ini_get(vm->ini_config, "rom", "rom_image");
-    const char * pc_on_reset_string = ini_get(vm->ini_config, "rom", "pc_on_reset");
+    const char * pc_on_reset_string = ini_get(vm->ini_config, "cpu", "pc_on_reset");
     ASSERT(rom_image);
     ASSERT(pc_on_reset_string);
     uint32_t pc_on_reset = strtol(pc_on_reset_string, NULL, 16);
     ASSERT(!preload_binary_image(vm->bootrom_host_base + pc_on_reset - vm->bootrom_base,
-                                 vm->bootrom_size,
+                                 vm->bootrom_size - pc_on_reset + vm->bootrom_base,
                                  rom_image));
 }

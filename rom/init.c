@@ -6,6 +6,7 @@
 #include <unittest.h>
 #include <sha1.h>
 #include <uart.h>
+#include <fdt.h>
 
 void
 rom_init(void)
@@ -13,6 +14,7 @@ rom_init(void)
     uart16550_init();
     // perform basic unit tests
     unit_test();
+    validate_dtb();
 
     // at last we jump to guest image, and never be back
     uint32_t hart_id = 0x0;

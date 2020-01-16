@@ -10,115 +10,59 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static uint64_t
-main_memory_direct_read(uint64_t addr, int access_size,
-                        struct hart * hartptr,
-                        struct pm_region_operation * pmr)
-{
-    uint64_t val = 0;
-    struct virtual_machine * vm = hartptr->vmptr;
-    void * memory_access_base = vm->main_mem_host_base + (addr - pmr->addr_low);
-    switch (access_size)
-    {
-#define _(size, type)                                                          \
-        case size:                                                             \
-            val = *(type *)memory_access_base;                                 \
-            break
-        _(1, uint8_t);
-        _(2, uint16_t);
-        _(4, uint32_t);
-        _(8, uint64_t);
-        default:
-            __not_reach();
-            break;
-#undef _
-    }
-    return val;
-}
-
-static void
-main_memory_direct_write(uint64_t addr, int access_size, uint64_t value,
-                        struct hart * hartptr,
-                        struct pm_region_operation * pmr)
-{
-    struct virtual_machine * vm = hartptr->vmptr;
-    void * memory_access_base = vm->main_mem_host_base + (addr - pmr->addr_low);
-    switch (access_size)
-    {
-#define _(size, type)                                                          \
-        case size:                                                             \
-            *(type *)memory_access_base = (type)value;                         \
-            break
-        _(1, uint8_t);
-        _(2, uint16_t);
-        _(4, uint32_t);
-        _(8, uint64_t);
-        default:
-            __not_reach();
-            break;
-#undef _
-    }
-}
-
-static void
-memory_init(struct virtual_machine * vm)
-{
-    // after the main memory is allocated. register it as the physical memory region
-    // in the global list. it's backed as main memory.
-    struct pm_region_operation main_memory_pmr = {
-        .addr_low = vm->main_mem_base,
-        .addr_high = vm->main_mem_base + vm->main_mem_size,
-        .pmr_read = main_memory_direct_read,
-        .pmr_write = main_memory_direct_write,
-        .pmr_desc = "main.memory"
-    };
-    register_pm_region_operation(&main_memory_pmr);
-}
-
 static void
 device_init(struct virtual_machine * vm)
 {
     uart_init();
 }
 
-void
-virtual_machine_init(struct virtual_machine * vm,
-                     const struct virtual_machine_spec * spec)
+static void
+cpu_init(struct virtual_machine * vm)
 {
-    int idx = 0;
-    struct hart * hart_ptr;
-    memset(vm, 0x0, sizeof(struct virtual_machine));
-    // nothing can precede ini configuration
-    vm->ini_config = spec->ini_config;
-
-    bootrom_init(vm);
-
-    vm->main_mem_base = spec->main_mem_base;
-    vm->main_mem_size = MEGA(spec->main_mem_size_in_mega);
-    vm->main_mem_host_base = preallocate_physical_memory(vm->main_mem_size);
-    ASSERT(vm->main_mem_host_base);
-    
-
-    vm->nr_harts = spec->nr_harts;
-    vm->boot_hart = spec->boot_cpu;
+    const char * nr_cpus_string = ini_get(vm->ini_config, "cpu", "nr_cpus");
+    const char * boot_cpu_string = ini_get(vm->ini_config, "cpu", "boot_cpu");
+    ASSERT(nr_cpus_string);
+    vm->nr_harts = strtol(nr_cpus_string, NULL, 10);
+    vm->boot_hart = 0;
+    if (boot_cpu_string) {
+        vm->boot_hart = strtol(boot_cpu_string, NULL, 10);   
+    }
     vm->harts = aligned_alloc(64, vm->nr_harts * sizeof(struct hart));
     ASSERT(vm->harts);
 
-    for (idx = 0; idx < vm->nr_harts; idx++) {
-        hart_ptr = hart_by_id(vm, idx);
-        hart_init(hart_ptr, idx);
-        hart_ptr->pc = 0x4000;
-        hart_ptr->vmptr = vm;
-    }
+    const char * pc_on_reset_string = ini_get(vm->ini_config, "cpu", "pc_on_reset");
+    ASSERT(pc_on_reset_string);
+    uint32_t pc_on_reset = strtol(pc_on_reset_string, NULL, 16);
 
-    ASSERT(!preload_binary_image(vm->main_mem_host_base + spec->image_load_base - vm->main_mem_base,
-                                 vm->main_mem_size, spec->image_path));
-    memory_init(vm);
+    int idx = 0;
+    for (; idx < vm->nr_harts; idx++) {
+        struct hart * hartptr = hart_by_id(vm, idx);
+        hart_init(hartptr, idx);
+        hartptr->pc = pc_on_reset;
+        hartptr->vmptr = vm;
+    }
+}
+
+static void
+misc_init(struct virtual_machine * vm)
+{
+
+}
+
+void
+virtual_machine_init(struct virtual_machine * vm, ini_t * ini)
+{
+    memset(vm, 0x0, sizeof(struct virtual_machine));
+    // nothing can precede ini configuration
+    vm->ini_config = ini;
+
+    bootrom_init(vm);
+    ram_init(vm);
+    cpu_init(vm);
     device_init(vm);
+    misc_init(vm);
+    fdt_init(&vm->fdt);
 
     dump_memory_regions();
-
-    // build the device tree
-    build_device_tree(&vm->fdt);
 }
 

@@ -64,6 +64,7 @@ struct hart {
     
     void * csrs_base;
     uint32_t hart_magic;
+
 }__attribute__((aligned(64)));
 
 

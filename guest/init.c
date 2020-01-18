@@ -6,12 +6,14 @@
 #include <printk.h>
 
 int
-init_main(void)
+init_main(uint32_t boot_hartid, uint8_t * dtb)
 {
     int a = 4;
     int b = 12;
     uart16550_init();
 
+    printk("boot hartid:%d\n", boot_hartid);
+    printk("dtb base: 0x%x\n", dtb);
     printk("Hello World from %s\n", "guest");
     printk("hex:%x dec:%d char:%c\n", 0xffee000f, -2345, 'c');
     while (0) {

@@ -15,10 +15,13 @@ riscv_generic_csr_callback(struct hart * hartptr, uint64_t instruction)
     struct decoding dec;
     instruction_decoding_per_type(&dec, (uint32_t)instruction, ENCODING_TYPE_I);
     struct csr_entry * csr = &((struct csr_entry *)hartptr->csrs_base)[dec.imm & 0xfff];
-    // FIXME: swith it on
-    //ASSERT(csr->is_valid);
-    //ASSERT(csr->read);
-    //ASSERT(csr->write);
+    
+    if (!csr->is_valid) {
+        // This must be a panic in case we miss some CSRs
+        log_fatal("mcsr 0x%x is not implemented\n", dec.imm & 0xfff);
+        PANIC(hartptr);
+    }
+
     switch (dec.funct3)
     {
         case 0x01:

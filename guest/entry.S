@@ -4,6 +4,8 @@
 //.extern kernel_init 
 .global guest_kernel_entry
 guest_kernel_entry:
+    // a0 is the booting hartid
+    // a1 is the DTB base
     la sp, __stack_top
     //ebreak
     jal ra, init_main

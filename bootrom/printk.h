@@ -14,6 +14,7 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 void
-printk(const char *fmt, ...);
+printk_no_prefix(const char *fmt, ...);
 
+#define printk(fmt, ...) printk_no_prefix("BOOTROM: "fmt, ##__VA_ARGS__)
 #endif

@@ -130,7 +130,7 @@ printk_mp_raw(const char * fmt, va_list arg_ptr)
 
 
 void
-printk(const char *fmt, ...)
+printk_no_prefix(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

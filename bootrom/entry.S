@@ -18,7 +18,7 @@ rom_entry:
 
 
 .section .bss
-.space 4096 * 4
+.space 4096 * 2
 .align 16
 __init_stack:
 

@@ -10,9 +10,9 @@ ASPARAMS = -m64 -mno-red-zone
 CCPARAMS = -O0 -g3 -ffreestanding -mno-fdiv -march=rv32imafd -mabi=ilp32 -nostdlib -fno-builtin -fno-exceptions -Werror -Wall -Wstrict-prototypes
 LDPARAMS = -m elf32lriscv -static
 
-ROM_ELF = rom.rv32.elf
-ROM_IMG = rom.rv32.img
-ROM_MAP = rom.rv32.map
+ROM_ELF = bootrom.rv32.elf
+ROM_IMG = bootrom.rv32.img
+ROM_MAP = bootrom.rv32.map
 
 CROSS_COMPILE = riscv32-unknown-elf-
 %.o: %.S
@@ -33,7 +33,7 @@ $(ROM_ELF):$(AS_OBJS) $(C_OBJS)
 	@$(CROSS_COMPILE)ld $(LDPARAMS) -Map=$(ROM_MAP) -T linker.ld -o $(ROM_ELF) $(AS_OBJS) $(C_OBJS)
 
 clean:
-	@echo "[Cleaning] rom"
+	@echo "[Cleaning] bootrom"
 	@rm -f *.o $(ROM_ELF) $(ROM_IMG) $(ROM_MAP)
 	@rm -f *.o.plain
 

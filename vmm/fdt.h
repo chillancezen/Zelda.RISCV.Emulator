@@ -42,8 +42,20 @@ struct fdt_build_blob {
     uint8_t * string_buffer;
     uint32_t string_buffer_size;
     uint32_t string_buffer_iptr;
+
+    // auxiliary variables.
+    int harts_phandles[MAX_NR_HARTS];
+    int hart_interrupt_controllers_phandles[MAX_NR_HARTS];
+    int phandle_generator;
 };
 
+static inline int
+generate_phandle(struct fdt_build_blob * blob)
+{
+    int phandle = blob->phandle_generator;
+    blob->phandle_generator += 1;
+    return phandle;
+}
 
 void
 fdt_build_init(struct fdt_build_blob * blob, int buffer_size,

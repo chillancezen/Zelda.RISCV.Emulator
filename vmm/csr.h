@@ -11,6 +11,7 @@
 
 struct csr_entry {
     uint32_t is_valid:1;
+    uint32_t csr_addr:16;
     uint32_t csr_blob;
 
     // on write: csr_blob &= wpri_mask

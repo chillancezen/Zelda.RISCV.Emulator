@@ -15,6 +15,7 @@ fdt_build_init(struct fdt_build_blob * blob, int buffer_size,
                int string_buffer_size)
 {
     memset(blob, 0, sizeof(struct fdt_build_blob));
+    blob->phandle_generator = 1;
     blob->buffer_size = buffer_size;
     blob->buffer = malloc(buffer_size);
     ASSERT(blob->buffer);
@@ -224,7 +225,8 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
         hart_ptr = hart_by_id(vm, idx);
         sprintf(name, "core%d", hart_ptr->hart_id);
         fdt_begin_node(blob, name);
-        uint32_t cpu_phandle = BIG_ENDIAN32(idx);
+        blob->harts_phandles[idx] = generate_phandle(blob);
+        uint32_t cpu_phandle = BIG_ENDIAN32(blob->harts_phandles[idx]);
         fdt_prop(blob, "cpu", 4, &cpu_phandle);
         fdt_end_node(blob);
     }
@@ -235,7 +237,7 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
         hart_ptr = hart_by_id(vm, idx);
         sprintf(name, "cpu@%d", hart_ptr->hart_id);
         fdt_begin_node(blob, name);
-        uint32_t cpu_phandle = BIG_ENDIAN32(idx);
+        uint32_t cpu_phandle = BIG_ENDIAN32(blob->harts_phandles[idx]);
         fdt_prop(blob, "phandle", 4, &cpu_phandle);
         fdt_prop(blob, "device_type", strlen("cpu") + 1, "cpu");
         fdt_prop(blob, "status", strlen("okay") + 1, "okay");
@@ -244,8 +246,65 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
         fdt_prop(blob, "mmu-type", strlen("riscv,sv32") + 1, "riscv,sv32");
         uint32_t hartid = BIG_ENDIAN32(hart_ptr->hart_id);
         fdt_prop(blob, "reg", 4, &hartid);
+        fdt_begin_node(blob, "interrupt-controller");
+        uint32_t interrupt_cells = BIG_ENDIAN32(1);
+        fdt_prop(blob, "#interrupt-cells", 4, &interrupt_cells);
+        fdt_prop(blob, "interrupt-controller", 0, NULL);
+        blob->hart_interrupt_controllers_phandles[idx] = generate_phandle(blob);
+        uint32_t interrupt_controller_phandle =
+            BIG_ENDIAN32(blob->hart_interrupt_controllers_phandles[idx]);
+        fdt_prop(blob, "phandle", 4, &interrupt_controller_phandle);
+        fdt_prop(blob, "compatible", strlen("riscv,cpu-intc") + 1,
+                 "riscv,cpu-intc");
+        fdt_end_node(blob);
         fdt_end_node(blob);
     }
+    fdt_end_node(blob);
+}
+
+static void
+build_soc_fdt_node(struct fdt_build_blob * blob)
+{
+    struct virtual_machine * vm =
+        CONTAINER_OF(blob, struct virtual_machine, fdt);
+    fdt_begin_node(blob, "soc");
+    uint32_t address_cells = BIG_ENDIAN32(2);
+    uint32_t size_cells = BIG_ENDIAN32(2);
+    fdt_prop(blob, "#address-cells", 4, &address_cells);
+    fdt_prop(blob, "#size-cells", 4, &size_cells);
+    fdt_prop(blob, "compatible", strlen("simple-bus") + 1, "simple-bus");
+    fdt_prop(blob, "ranges", 0, NULL);
+    
+    // define Core Local Interrupt Controller CLINT which generates and delivers
+    // machine timer interrupt and supervisor timer interrupt
+    // interrupt 0x3 and 0x7.
+    const char * clint_base_string = ini_get(vm->ini_config, "cpu", "clint_base");
+    const char * clint_size_string = ini_get(vm->ini_config, "cpu", "clint_size");
+    ASSERT(clint_base_string);
+    ASSERT(clint_size_string);
+    uint32_t clint_base = strtol(clint_base_string, NULL, 16);
+    uint32_t clint_size = strtol(clint_size_string, NULL, 16);
+    char name[64];
+    sprintf(name, "clint@%x", clint_base);
+    fdt_begin_node(blob, name);
+    uint32_t regs[4] = {
+        0x0, BIG_ENDIAN32(clint_base),
+        0x0, BIG_ENDIAN32(clint_size)
+    };
+    fdt_prop(blob, "reg", 16, regs);
+    fdt_prop(blob, "compatible", strlen("riscv,clint0") + 1, "riscv,clint0");
+    uint32_t interrupt_extended[4 * MAX_NR_HARTS];
+    int idx = 0;
+    for (; idx < vm->nr_harts; idx++) {
+        interrupt_extended[idx * 4 + 0] =
+            BIG_ENDIAN32(blob->hart_interrupt_controllers_phandles[idx]);
+        interrupt_extended[idx * 4 + 1] = BIG_ENDIAN32(0x3);
+        interrupt_extended[idx * 4 + 2] =
+            BIG_ENDIAN32(blob->hart_interrupt_controllers_phandles[idx]);
+        interrupt_extended[idx * 4 + 1] = BIG_ENDIAN32(0x7);
+    }
+    fdt_prop(blob, "interrupts-extended", 16 * vm->nr_harts, interrupt_extended);
+    fdt_end_node(blob);
     fdt_end_node(blob);
 }
 
@@ -265,6 +324,8 @@ fdt_init(struct fdt_build_blob * blob)
     build_uart_fdt_node(blob);
     build_memory_fdt_node(blob);
     build_cpu_fdt_node(blob);
+    build_soc_fdt_node(blob);
+
     fdt_end_node(blob);
     fdt_end(blob);
 

@@ -12,7 +12,11 @@ __attribute__((always_inline)) static inline uint##_size##_t                   \
 direct_read##_size (struct hart * hartptr, uint32_t linear_address)            \
 {                                                                              \
     struct pm_region_operation * pmr;                                          \
-    ASSERT((pmr = search_pm_region_callback(linear_address)));                 \
+    pmr = search_pm_region_callback(linear_address);                           \
+    if (!pmr) {                                                                \
+        dump_hart(hartptr);                                                    \
+        __not_reach();                                                         \
+    }                                                                          \
     return pmr->pmr_read(linear_address, _size / 8, hartptr, pmr);             \
 }
 
@@ -31,7 +35,11 @@ direct_write##_size (struct hart * hartptr, uint32_t linear_address,           \
                      uint##_size##_t value)                                    \
 {                                                                              \
     struct pm_region_operation * pmr;                                          \
-    ASSERT((pmr = search_pm_region_callback(linear_address)));                 \
+    pmr = search_pm_region_callback(linear_address);                           \
+    if (!pmr) {                                                                \
+        dump_hart(hartptr);                                                    \
+        __not_reach();                                                         \
+    }                                                                          \
     pmr->pmr_write(linear_address, _size / 8, value, hartptr, pmr);            \
 }
 

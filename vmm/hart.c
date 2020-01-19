@@ -26,6 +26,7 @@ csr_registery_init(struct hart * hartptr)
         struct csr_entry * csr =
             &((struct csr_entry *)hartptr->csrs_base)[ptr->csr_addr & 0xfff];
         csr->is_valid = 1;
+        csr->csr_addr = ptr->csr_addr & 0xfff; 
         csr->csr_blob = 0;
         csr->wpri_mask = ptr->csr_registery.wpri_mask;
         csr->write = ptr->csr_registery.write;

@@ -174,6 +174,105 @@ static struct csr_registery_entry mcounteren_csr_entry = {
     }
 };
 
+
+static void
+csr_mie_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mie write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mie_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mie read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mie_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    // disable all interrupts
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mie_csr_entry = {
+    .csr_addr = 0x304,
+    .csr_registery = {
+        .wpri_mask = 0x00000bbb,
+        .reset = csr_mie_reset,
+        .read = csr_mie_read,
+        .write = csr_mie_write
+    }
+};
+
+static void
+csr_medeleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:medeleg write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_medeleg_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:medeleg read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_medeleg_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry medeleg_csr_entry = {
+    .csr_addr = 0x302,
+    .csr_registery = {
+        .wpri_mask = 0xfffff7ff,
+        .reset = csr_medeleg_reset,
+        .read = csr_medeleg_read,
+        .write = csr_medeleg_write
+    }
+};
+
+static void
+csr_mideleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mideleg write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mideleg_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mideleg read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mideleg_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mideleg_csr_entry = {
+    .csr_addr = 0x303,
+    .csr_registery = {
+        .wpri_mask = 0x00000bbb,
+        .reset = csr_mideleg_reset,
+        .read = csr_mideleg_read,
+        .write = csr_mideleg_write
+    }
+};
+
+
 __attribute__((constructor)) static void
 csr_machine_level_init(void)
 {
@@ -183,4 +282,7 @@ csr_machine_level_init(void)
     register_csr_entry(&mhartid_csr_entry);
     register_csr_entry(&mtvec_csr_entry);
     register_csr_entry(&mcounteren_csr_entry);
+    register_csr_entry(&mie_csr_entry);
+    register_csr_entry(&medeleg_csr_entry);
+    register_csr_entry(&mideleg_csr_entry);
 }

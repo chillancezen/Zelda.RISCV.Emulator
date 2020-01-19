@@ -11,6 +11,8 @@
 #define BUILD_TYPE BUILD_TYPE_DEBUG
 
 #define XLEN 32
+// The maximum number of harts a vm can support
+#define MAX_NR_HARTS 64
 
 //#define DEBUG_TRACE
 //#define DEBUG_TRANSLATION

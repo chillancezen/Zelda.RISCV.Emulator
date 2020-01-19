@@ -27,9 +27,10 @@ int main(int argc, char ** argv)
     }
 
 
-    struct virtual_machine vm0;
-    virtual_machine_init(&vm0, ini_config);
-    vmresume(hart_by_id(&vm0, vm0.boot_hart));
-    __asm__ volatile(".byte 0xcc;");
+    // Boot a VM
+    struct virtual_machine vm;
+    virtual_machine_init(&vm, ini_config);
+    vmresume(hart_by_id(&vm, vm.boot_hart));
+    __not_reach();
     return 0;
 }

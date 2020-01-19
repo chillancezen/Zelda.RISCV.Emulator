@@ -9,6 +9,7 @@
 #include <pm_region.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <debug.h>
 
 static void
 device_init(struct virtual_machine * vm)
@@ -46,7 +47,16 @@ cpu_init(struct virtual_machine * vm)
 static void
 misc_init(struct virtual_machine * vm)
 {
-
+    // Load breakpoints if there is any.
+    char * breakpoints = (char *)ini_get(vm->ini_config, "debug", "breakpoints");
+    char delimiter[] = " ";
+    if (breakpoints) {
+        char * bp = strtok(breakpoints, delimiter);
+        while (bp) {
+            add_breakpoint(strtol(bp, NULL, 16));
+            bp = strtok(NULL, delimiter);
+        }
+    }
 }
 
 void

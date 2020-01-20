@@ -60,4 +60,7 @@ ram_init(struct virtual_machine * vm);
 void
 uart_init(void);
 
+void
+clint_init(struct virtual_machine * vm);
+
 #endif

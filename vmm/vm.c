@@ -14,6 +14,7 @@
 static void
 device_init(struct virtual_machine * vm)
 {
+    clint_init(vm);
     uart_init();
 }
 

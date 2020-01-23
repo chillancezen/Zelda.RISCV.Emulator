@@ -46,6 +46,9 @@ riscv_fence_instructions_translation_entry(struct prefetch_blob * blob,
 {
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_S);
+    if (!per_funct3_handlers[dec.funct3]) {
+        log_fatal("no handler for fence_instructions:%d\n", dec.funct3);
+    }
     ASSERT(per_funct3_handlers[dec.funct3]);
     per_funct3_handlers[dec.funct3](&dec, blob, instruction);
 }

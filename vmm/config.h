@@ -24,8 +24,7 @@
 /*
  * initial logging level
  * LOG_TRACE, LOG_DEBUG, LOG_INFO,LOG_WARN, LOG_ERROR, LOG_FATAL, LOG_UART
+ * it may be overriden by per-vm debug.verbosity
  */
-
-
 #define LOGGING_LEVEL LOG_TRACE
 #endif

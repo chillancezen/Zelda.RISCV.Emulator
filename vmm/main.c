@@ -13,6 +13,15 @@
 #include <ini.h>
 
 
+static void
+vmm_misc_init(ini_t * ini)
+{
+    const char * verbosity_string = ini_get(ini, "debug", "verbosity");
+    if (verbosity_string) {
+        int verbosity = strtol(verbosity_string, NULL, 10);
+        log_set_level(verbosity);
+    }
+}
 int main(int argc, char ** argv)
 {
     if (argc <= 1) {
@@ -25,8 +34,8 @@ int main(int argc, char ** argv)
         log_fatal("can not load ini file:%s\n", argv[1]);
         exit(2);
     }
-
-
+    // vmm platform init
+    vmm_misc_init(ini_config);
     // Boot a VM
     struct virtual_machine vm;
     virtual_machine_init(&vm, ini_config);

@@ -208,6 +208,40 @@ static struct csr_registery_entry mie_csr_entry = {
     }
 };
 
+
+static void
+csr_mip_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mip write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mip_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mip read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mip_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    // clear all interrupts pending status
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mip_csr_entry = {
+    .csr_addr = 0x344,
+    .csr_registery = {
+        .wpri_mask = 0x00000bbb,
+        .reset = csr_mip_reset,
+        .read = csr_mip_read,
+        .write = csr_mip_write
+    }
+};
+
 static void
 csr_medeleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
@@ -283,6 +317,7 @@ csr_machine_level_init(void)
     register_csr_entry(&mtvec_csr_entry);
     register_csr_entry(&mcounteren_csr_entry);
     register_csr_entry(&mie_csr_entry);
+    register_csr_entry(&mip_csr_entry); 
     register_csr_entry(&medeleg_csr_entry);
     register_csr_entry(&mideleg_csr_entry);
 }

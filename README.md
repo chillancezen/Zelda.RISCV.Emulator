@@ -42,7 +42,7 @@ The system level emulator which utilizes dynamic binary translation for RISCV IS
 - [x] SRA rd, rs1, rs2
 - [x] SLT rd, rs1, rs2
 - [x] SLTU rd, rs1, rs2
-- [ ] FENCE pred, succ
+- [x] FENCE pred, succ
 - [X] FENCE.I
 
 #### RV32M instructions

@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <hart.h>
 #include <sys/queue.h>
+#include <log.h>
 
 #define WPRI_MASK_ALL 0xffffffff
 
@@ -42,6 +43,7 @@ register_csr_entry(struct csr_registery_entry * entry)
 {
     entry->next = csr_registery_head;
     csr_registery_head = entry;
+    log_debug("registering csr 0x%x\n", entry->csr_addr);
 }
 
 

@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2019 Jie Zheng
+ * Copyright (c) 2019-2020 Jie Zheng
  */
 
 #include <translation.h>
 #include <util.h>
 #include <debug.h>
+#include <hart_util.h>
 
 __attribute__((unused)) static void
 ebreak_callback(struct hart * hartptr)
@@ -43,13 +44,60 @@ riscv_ebreak_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
+__attribute__((unused)) static void
+mret_callback(struct hart * hartptr)
+{
+    // PC <= mepc
+    // MIE <= MPIE
+    // current privilege level <= MPP
+    // MPIE <= 1
+    // MPP <= user privilege level
+    adjust_mstatus_upon_mret(hartptr);
+    adjust_pc_upon_mret(hartptr);
+    
+}
+
+static void
+riscv_mret_translator(struct decoding * dec, struct prefetch_blob * blob,
+                      uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    PRECHECK_TRANSLATION_CACHE(mret_instruction, blob);
+    BEGIN_TRANSLATION(mret_instruction);
+    __asm__ volatile("movq %%r12, %%rdi;"
+                     "movq $mret_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
+                     "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
+                     TRAP_TO_VMM(mret_instruction)
+                     :
+                     :
+                     :"memory");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32()
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(mret_instruction);
+        BEGIN_PARAM(mret_instruction)
+            instruction_linear_address
+        END_PARAM()
+    COMMIT_TRANSLATION(mret_instruction, hartptr, instruction_linear_address);
+    blob->is_to_stop = 1;
+}
+
 static void
 riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
                             uint32_t instruction)
 {
     if (dec->rs2_index == 0x1) {
         riscv_ebreak_translator(dec, blob, instruction); 
-    } else {
+    } else if (dec->rs2_index == 0x2) {
+        if ((dec->imm >> 5) == 0x18) {
+            riscv_mret_translator(dec, blob, instruction);
+        } else {
+            __not_reach();
+        }
+    }else {
         log_fatal("can not translate:0x%x at 0x%x\n", instruction, blob->next_instruction_to_fetch);
         __not_reach();
     }

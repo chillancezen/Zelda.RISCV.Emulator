@@ -21,7 +21,7 @@ csr_mscratch_read(struct hart *hartptr, struct csr_entry *csr)
 }
 
 static struct csr_registery_entry mscratch_csr_entry = {
-    .csr_addr = 0x340,
+    .csr_addr = CSR_ADDRESS_MSCRATCH,
     .csr_registery = {
         .wpri_mask = WPRI_MASK_ALL,
         .write = csr_mscratch_write,
@@ -307,6 +307,73 @@ static struct csr_registery_entry mideleg_csr_entry = {
 };
 
 
+static void
+csr_mstatus_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mstatus write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mstatus_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mstatus read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mstatus_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mstatus_csr_entry = {
+    .csr_addr = CSR_ADDRESS_MSTATUS,
+    .csr_registery = {
+        // FIXME: some bits are hardwired to Zero, fix them later
+        .wpri_mask = 0x000019aa,
+        .reset = csr_mstatus_reset,
+        .read = csr_mstatus_read,
+        .write = csr_mstatus_write
+    }
+};
+
+
+
+static void
+csr_mepc_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mepc write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mepc_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mepc read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mepc_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mepc_csr_entry = {
+    .csr_addr = CSR_ADDRESS_MEPC,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_mepc_reset,
+        .read = csr_mepc_read,
+        .write = csr_mepc_write
+    }
+};
+
 __attribute__((constructor)) static void
 csr_machine_level_init(void)
 {
@@ -320,4 +387,6 @@ csr_machine_level_init(void)
     register_csr_entry(&mip_csr_entry); 
     register_csr_entry(&medeleg_csr_entry);
     register_csr_entry(&mideleg_csr_entry);
+    register_csr_entry(&mstatus_csr_entry);
+    register_csr_entry(&mepc_csr_entry);
 }

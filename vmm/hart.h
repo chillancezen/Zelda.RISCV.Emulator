@@ -1,18 +1,11 @@
 /*
- * Copyright (c) 2019 Jie Zheng
+ * Copyright (c) 2019-2020 Jie Zheng
  */
 #ifndef _HART_H
 #define _HART_H
-
+#include <hart_def.h>
 #include <stdint.h>
 #include <util.h>
-
-
-#if XLEN == 32
-#define REGISTER_TYPE uint32_t
-#elif XLEN == 64
-#define REGISTER_TYPE uint64_t
-#endif
 
 
 struct integer_register_profile {
@@ -37,16 +30,8 @@ struct program_counter_mapping_item {
     uint32_t tc_offset;
 }__attribute__((packed));
 
-// XXX: make it big, so it doesn't need to be flushed when debuging the TC
-#define TRANSLATION_CACHE_SIZE (1024 * 64)
-// XXX: make it not that big, because it takes too much to search translated instruction.
-#define MAX_INSTRUCTIONS_TOTRANSLATE 512
 
-// reserve a small trunk of space to transfer control to vmm
-#define VMM_STACK_SIZE (1024 * 8)
 
-// for debug reason, put a magic word in each hart.
-#define HART_MAGIC_WORD 0xdeadbeef
 
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
@@ -65,6 +50,7 @@ struct hart {
     void * csrs_base;
     uint32_t hart_magic;
 
+    uint32_t privilege_level:2;
 }__attribute__((aligned(64)));
 
 

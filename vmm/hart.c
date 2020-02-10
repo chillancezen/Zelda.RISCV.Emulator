@@ -75,6 +75,9 @@ hart_init(struct hart * hart_instance, int hart_id)
     ASSERT(hart_instance->csrs_base);
     memset(hart_instance->csrs_base, 0x0, 4096 * sizeof(struct csr_entry));
     csr_registery_init(hart_instance);
+
+    // HART initialized as M-MODE
+    hart_instance->privilege_level = PRIVILEGE_LEVEL_MACHINE;
 }
 
 
@@ -98,7 +101,7 @@ comparing_mapping_item(const void *a, const void * b)
     return item_a->guest_pc - item_b->guest_pc;
 }
 #else
-// MACRO is much more quicker
+// MACRO is much more quick
     #define comparing_mapping_item(pa, pb)({                                   \
         (int)((pa)->guest_pc - (pb)->guest_pc);                                \
     })

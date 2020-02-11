@@ -19,19 +19,24 @@ setup_mmode_trap(struct hart * hartptr, uint32_t cause, uint32_t tval)
     
     // MPP is set to the privilege level at the time of trap...
     // and current privilege level is set to machine mode.
-    uint32_t mpp = hartptr->privilege_level;
-    struct csr_entry * csr_mstatus =
-        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_MSTATUS];
-    csr_mstatus->csr_blob &= ~(3 << 11);
-    csr_mstatus->csr_blob |= mpp << 11;
+    //uint32_t mpp = hartptr->privilege_level;
+    //struct csr_entry * csr_mstatus =
+    //    &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_MSTATUS];
+    //csr_mstatus->csr_blob &= ~(3 << 11);
+    //csr_mstatus->csr_blob |= mpp << 11;
+    //hartptr->privilege_level = PRIVILEGE_LEVEL_MACHINE;
+    hartptr->status.mpp = hartptr->privilege_level;
     hartptr->privilege_level = PRIVILEGE_LEVEL_MACHINE;
+
 
     // MPIE is set to MIE at the time of trap...
     // MIE is set to 0.
-    uint32_t mie = (csr_mstatus->csr_blob >> 3) & 0x1;
-    csr_mstatus->csr_blob &=  ~(1 << 7);
-    csr_mstatus->csr_blob |= mie << 7;
-    csr_mstatus->csr_blob &= ~(1 << 3);
+    //uint32_t mie = (csr_mstatus->csr_blob >> 3) & 0x1;
+    //csr_mstatus->csr_blob &=  ~(1 << 7);
+    //csr_mstatus->csr_blob |= mie << 7;
+    //csr_mstatus->csr_blob &= ~(1 << 3);
+    hartptr->status.mpie = hartptr->status.mie;
+    hartptr->status.mie = 0;
 
     // PC is set to the trap vector.
     struct csr_entry * csr_mtvec =

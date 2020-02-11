@@ -49,6 +49,17 @@ union interrupt_control_blob {
     uint32_t dword;
 }__attribute__((packed));
 
+struct status_control_blob {
+    uint32_t uie:1;
+    uint32_t sie:1;
+    uint32_t mie:1;
+    uint32_t upie:1;
+    uint32_t spie:1;
+    uint32_t mpie:1;
+    uint32_t spp:1;
+    uint32_t mpp:2;
+};
+
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
     REGISTER_TYPE pc;
@@ -69,6 +80,7 @@ struct hart {
     union interrupt_control_blob idelegation;
     union interrupt_control_blob ienable;
     union interrupt_control_blob ipending;
+    struct status_control_blob status;
 
     uint32_t privilege_level:2;
 }__attribute__((aligned(64)));

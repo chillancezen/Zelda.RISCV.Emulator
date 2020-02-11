@@ -188,6 +188,18 @@ dump_hart(struct hart * hartptr)
             printf("\n");
         }
     }
+    printf("\thart control and status:\n");
+    printf("\tprivilege level:%x\n", hartptr->privilege_level);
+    printf("\tstatus: uie:%d sie:%d mie:%d upie:%d spie:%d mpie:%d spp:%x, mpp:%x\n",
+           hartptr->status.uie, hartptr->status.sie, hartptr->status.mie,
+           hartptr->status.upie, hartptr->status.spie, hartptr->status.mpie,
+           hartptr->status.spp, hartptr->status.mpp);
+    printf("\tinterrupt pending: 0x%08x\n", hartptr->ipending.dword);
+    printf("\tinterrupt enable: 0x%08x\n", hartptr->ienable.dword);
+    printf("\tinterrupt delegation: 0x%08x\n", hartptr->idelegation.dword);
+    struct csr_entry * csr_medeleg =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_MEDELEG];
+    printf("\tmachine exception delegation: 0x%08x\n", csr_medeleg->csr_blob);
 }
 
 

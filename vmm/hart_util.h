@@ -30,6 +30,15 @@ adjust_pc_upon_mret(struct hart * hartptr)
 static inline void
 adjust_mstatus_upon_mret(struct hart * hartptr)
 {
+    uint8_t mpp = hartptr->status.mpp;
+    ASSERT(mpp == PRIVILEGE_LEVEL_USER ||
+           mpp == PRIVILEGE_LEVEL_SUPERVISOR ||
+           mpp == PRIVILEGE_LEVEL_MACHINE);
+    hartptr->privilege_level = mpp;
+    hartptr->status.mpp = PRIVILEGE_LEVEL_USER;
+    hartptr->status.mie = hartptr->status.mpie;
+    hartptr->status.mpie = 1;
+    #if 0
     struct csr_entry * csr =
         &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_MSTATUS];
     uint8_t mpp = (csr->csr_blob >> 11) & 0x3;
@@ -42,6 +51,7 @@ adjust_mstatus_upon_mret(struct hart * hartptr)
     csr->csr_blob |= 1 << 7;
     csr->csr_blob &=  ~(1 << 3);
     csr->csr_blob |= mpie << 3;
+    #endif
 }
 
 static inline void

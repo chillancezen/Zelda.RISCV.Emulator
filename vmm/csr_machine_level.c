@@ -318,17 +318,33 @@ static struct csr_registery_entry mideleg_csr_entry = {
 static void
 csr_mstatus_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    csr->csr_blob = value;
+    hartptr->status.uie = (value >> 0) & 0x1;
+    hartptr->status.sie = (value >> 1) & 0x1;
+    hartptr->status.mie = (value >> 3) & 0x1;
+    hartptr->status.upie = (value >> 4) & 0x1;
+    hartptr->status.spie = (value >> 5) & 0x1;
+    hartptr->status.mpie = (value >> 7) & 0x1;
+    hartptr->status.spp = (value >> 8) & 0x1;
+    hartptr->status.mpp = (value >> 11) & 0x3;
     log_debug("hart id:%d, csr:mstatus write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+              hartptr->hart_id, value);
 }
 
 static uint32_t
 csr_mstatus_read(struct hart *hartptr, struct csr_entry *csr)
 {
+    uint32_t dword = 0;
+    dword |= ((uint32_t)hartptr->status.uie) << 0;
+    dword |= ((uint32_t)hartptr->status.sie) << 1;
+    dword |= ((uint32_t)hartptr->status.mie) << 3;
+    dword |= ((uint32_t)hartptr->status.upie) << 4;
+    dword |= ((uint32_t)hartptr->status.spie) << 5;
+    dword |= ((uint32_t)hartptr->status.mpie) << 7;
+    dword |= ((uint32_t)hartptr->status.spp) << 8;
+    dword |= ((uint32_t)hartptr->status.mpp) << 11;
     log_debug("hart id:%d, csr:mstatus read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
-    return csr->csr_blob;
+              hartptr->hart_id, dword);
+    return dword;
 }
 
 static void

@@ -133,7 +133,7 @@ csr_mtvec_reset(struct hart *hartptr, struct csr_entry * csr)
 }
 
 static struct csr_registery_entry mtvec_csr_entry = {
-    .csr_addr = 0x305,
+    .csr_addr = CSR_ADDRESS_MTVEC,
     .csr_registery = {
         .wpri_mask = 0xfffffffd,
         .reset = csr_mtvec_reset,
@@ -212,7 +212,13 @@ static struct csr_registery_entry mie_csr_entry = {
 static void
 csr_mip_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    csr->csr_blob = value;
+    // XXX: MEIP, MTIP and MSIP bits are read-only. any write should never modify
+    // these bits.
+    // MTIP can only be cleared by writing to MMIO timecmp mtimecmp region.
+    // MSIP can only be cleared by writing to MMIO IPI region
+    // MEIP is cleared by PLIC.
+    uint32_t mip_mask = csr->csr_blob & 0x888;
+    csr->csr_blob = (value & (~0x888)) | mip_mask;
     log_debug("hart id:%d, csr:mip write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
@@ -233,7 +239,7 @@ csr_mip_reset(struct hart *hartptr, struct csr_entry * csr)
 }
 
 static struct csr_registery_entry mip_csr_entry = {
-    .csr_addr = 0x344,
+    .csr_addr = CSR_ADDRESS_MIP,
     .csr_registery = {
         .wpri_mask = 0x00000bbb,
         .reset = csr_mip_reset,
@@ -265,7 +271,7 @@ csr_medeleg_reset(struct hart *hartptr, struct csr_entry * csr)
 }
 
 static struct csr_registery_entry medeleg_csr_entry = {
-    .csr_addr = 0x302,
+    .csr_addr = CSR_ADDRESS_MEDELEG,
     .csr_registery = {
         .wpri_mask = 0xfffff7ff,
         .reset = csr_medeleg_reset,
@@ -297,9 +303,11 @@ csr_mideleg_reset(struct hart *hartptr, struct csr_entry * csr)
 }
 
 static struct csr_registery_entry mideleg_csr_entry = {
-    .csr_addr = 0x303,
+    .csr_addr = CSR_ADDRESS_MIDELEG,
     .csr_registery = {
-        .wpri_mask = 0x00000bbb,
+        // XXX: only supervisor interrupts can be delegated back to supervisor
+        // others are hardwired to ZERO.
+        .wpri_mask = 0x00000222,
         .reset = csr_mideleg_reset,
         .read = csr_mideleg_read,
         .write = csr_mideleg_write
@@ -374,6 +382,71 @@ static struct csr_registery_entry mepc_csr_entry = {
     }
 };
 
+
+static void
+csr_mcause_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mcause write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mcause_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mcause read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mcause_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mcause_csr_entry = {
+    .csr_addr = CSR_ADDRESS_MCAUSE,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_mcause_reset,
+        .read = csr_mcause_read,
+        .write = csr_mcause_write
+    }
+};
+
+static void
+csr_mtval_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_debug("hart id:%d, csr:mtval write 0x:%x\n",
+              hartptr->hart_id, csr->csr_blob);
+}
+
+static uint32_t
+csr_mtval_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_debug("hart id:%d, csr:mtval read:0x%x\n",
+              hartptr->hart_id, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_mtval_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry mtval_csr_entry = {
+    .csr_addr = CSR_ADDRESS_MTVAL,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_mtval_reset,
+        .read = csr_mtval_read,
+        .write = csr_mtval_write
+    }
+};
+
 __attribute__((constructor)) static void
 csr_machine_level_init(void)
 {
@@ -389,4 +462,6 @@ csr_machine_level_init(void)
     register_csr_entry(&mideleg_csr_entry);
     register_csr_entry(&mstatus_csr_entry);
     register_csr_entry(&mepc_csr_entry);
+    register_csr_entry(&mcause_csr_entry);
+    register_csr_entry(&mtval_csr_entry);
 }

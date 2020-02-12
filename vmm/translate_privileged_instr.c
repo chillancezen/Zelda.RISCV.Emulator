@@ -6,7 +6,6 @@
 #include <util.h>
 #include <debug.h>
 #include <hart_util.h>
-#include <hart_trap.h>
 
 __attribute__((unused)) static void
 ebreak_callback(struct hart * hartptr)
@@ -53,8 +52,7 @@ mret_callback(struct hart * hartptr)
     // current privilege level <= MPP
     // MPIE <= 1
     // MPP <= user privilege level
-    raise_trap_raw(hartptr, PRIVILEGE_LEVEL_MACHINE, 3, hartptr->pc);
-    __not_reach();
+    assert_hart_running_in_mmode(hartptr);
     adjust_mstatus_upon_mret(hartptr);
     adjust_pc_upon_mret(hartptr);
     

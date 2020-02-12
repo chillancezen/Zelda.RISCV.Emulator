@@ -9,7 +9,7 @@
 #define _HART_UTIL_H
 #include <hart.h>
 #include <csr.h>
-
+#include <hart_exception.h>
 
 static inline uint32_t
 get_hart_mepc(struct hart * hartptr)
@@ -42,6 +42,14 @@ adjust_mstatus_upon_mret(struct hart * hartptr)
     csr->csr_blob |= 1 << 7;
     csr->csr_blob &=  ~(1 << 3);
     csr->csr_blob |= mpie << 3;
+}
+
+static inline void
+assert_hart_running_in_mmode(struct hart * hartptr)
+{
+    if (hartptr->privilege_level != PRIVILEGE_LEVEL_MACHINE) {
+        raise_exception(hartptr, EXCEPTION_ILLEEGAL_INSTRUCTION);
+    }
 }
 
 #endif

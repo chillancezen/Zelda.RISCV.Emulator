@@ -37,7 +37,7 @@ setup_mmode_trap(struct hart * hartptr, uint32_t cause, uint32_t tval)
     struct csr_entry * csr_mtvec =
         &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_MTVEC];
     uint32_t mtvec = csr_mtvec->csr_blob;
-    uint8_t trap_mode = mtvec & 0x1;
+    uint32_t trap_mode = mtvec & 0x1;
     if (!trap_mode || !(cause & 0x80000000)) {
         hartptr->pc = mtvec & (~3);
     } else {
@@ -79,9 +79,14 @@ raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
     if (target_privilege_level == PRIVILEGE_LEVEL_MACHINE) {
         setup_mmode_trap(hartptr, cause, tval);
     } else {
+        // WE DO NOT SUPPORT USER MODE INTERRUPT
+        ASSERT(target_privilege_level == PRIVILEGE_LEVEL_SUPERVISOR);
         __not_reach();
     }
 
+    // XXX: when trap is taken, the addressing manner may chnage, so
+    // the translation cache must be flushed.
+    flush_translation_cache(hartptr);
     do_trap(hartptr);
 }
 

@@ -207,3 +207,20 @@ dump_translation_cache(struct hart *hartptr)
     }
     printf("\n");
 }
+
+
+__attribute__((constructor)) static void
+misc_init(void)
+{
+    ASSERT(sizeof(union interrupt_control_blob) == 4);
+    union interrupt_control_blob blob = {
+        .dword = 0   
+    };
+    blob.bits.usi = 1;
+    blob.bits.uti = 1;
+    blob.bits.uei = 1;
+    blob.bits.mei = 1;
+    ASSERT(blob.dword == 0x911);
+    
+}
+

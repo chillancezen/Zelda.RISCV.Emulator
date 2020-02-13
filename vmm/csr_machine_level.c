@@ -178,30 +178,30 @@ static struct csr_registery_entry mcounteren_csr_entry = {
 static void
 csr_mie_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    csr->csr_blob = value;
+    hartptr->ienable.dword = value;
     log_debug("hart id:%d, csr:mie write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+              hartptr->hart_id, hartptr->ienable.dword);
 }
 
 static uint32_t
 csr_mie_read(struct hart *hartptr, struct csr_entry *csr)
 {
     log_debug("hart id:%d, csr:mie read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
-    return csr->csr_blob;
+              hartptr->hart_id, hartptr->ienable.dword);
+    return hartptr->ienable.dword;
 }
 
 static void
 csr_mie_reset(struct hart *hartptr, struct csr_entry * csr)
 {
     // disable all interrupts
-    csr->csr_blob = 0x0;
+    hartptr->ienable.dword = 0x0;
 }
 
 static struct csr_registery_entry mie_csr_entry = {
-    .csr_addr = 0x304,
+    .csr_addr = CSR_ADDRESS_MIE,
     .csr_registery = {
-        .wpri_mask = 0x00000bbb,
+        .wpri_mask = 0x00000aaa,
         .reset = csr_mie_reset,
         .read = csr_mie_read,
         .write = csr_mie_write
@@ -217,31 +217,31 @@ csr_mip_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
     // MTIP can only be cleared by writing to MMIO timecmp mtimecmp region.
     // MSIP can only be cleared by writing to MMIO IPI region
     // MEIP is cleared by PLIC.
-    uint32_t mip_mask = csr->csr_blob & 0x888;
-    csr->csr_blob = (value & (~0x888)) | mip_mask;
+    uint32_t mip_mask = hartptr->ipending.dword & 0x888;
+    hartptr->ipending.dword = (value & (~0x888)) | mip_mask;
     log_debug("hart id:%d, csr:mip write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+              hartptr->hart_id, hartptr->ipending.dword);
 }
 
 static uint32_t
 csr_mip_read(struct hart *hartptr, struct csr_entry *csr)
 {
     log_debug("hart id:%d, csr:mip read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
-    return csr->csr_blob;
+              hartptr->hart_id, hartptr->ipending.dword);
+    return hartptr->ipending.dword;
 }
 
 static void
 csr_mip_reset(struct hart *hartptr, struct csr_entry * csr)
 {
     // clear all interrupts pending status
-    csr->csr_blob = 0x0;
+    hartptr->ipending.dword = 0x0;
 }
 
 static struct csr_registery_entry mip_csr_entry = {
     .csr_addr = CSR_ADDRESS_MIP,
     .csr_registery = {
-        .wpri_mask = 0x00000bbb,
+        .wpri_mask = 0x00000aaa,
         .reset = csr_mip_reset,
         .read = csr_mip_read,
         .write = csr_mip_write
@@ -283,23 +283,23 @@ static struct csr_registery_entry medeleg_csr_entry = {
 static void
 csr_mideleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    csr->csr_blob = value;
+    hartptr->idelegation.dword = value;
     log_debug("hart id:%d, csr:mideleg write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+              hartptr->hart_id, hartptr->idelegation.dword);
 }
 
 static uint32_t
 csr_mideleg_read(struct hart *hartptr, struct csr_entry *csr)
 {
     log_debug("hart id:%d, csr:mideleg read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
-    return csr->csr_blob;
+              hartptr->hart_id, hartptr->idelegation.dword);
+    return hartptr->idelegation.dword;
 }
 
 static void
 csr_mideleg_reset(struct hart *hartptr, struct csr_entry * csr)
 {
-    csr->csr_blob = 0x0;
+    hartptr->idelegation.dword = 0x0;
 }
 
 static struct csr_registery_entry mideleg_csr_entry = {

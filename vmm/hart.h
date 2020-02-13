@@ -30,8 +30,24 @@ struct program_counter_mapping_item {
     uint32_t tc_offset;
 }__attribute__((packed));
 
-
-
+union interrupt_control_blob {
+    struct {
+        uint32_t usi:1;
+        uint32_t ssi:1;
+        uint32_t wpri0:1;
+        uint32_t msi:1;
+        uint32_t uti:1;
+        uint32_t sti:1;
+        uint32_t wpri1:1;
+        uint32_t mti:1;
+        uint32_t uei:1;
+        uint32_t sei:1;
+        uint32_t wpri2:1;
+        uint32_t mei:1;
+        uint32_t wpri3:20;
+    } bits;
+    uint32_t dword;
+}__attribute__((packed));
 
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
@@ -49,6 +65,10 @@ struct hart {
     
     void * csrs_base;
     uint32_t hart_magic;
+
+    union interrupt_control_blob idelegation;
+    union interrupt_control_blob ienable;
+    union interrupt_control_blob ipending;
 
     uint32_t privilege_level:2;
 }__attribute__((aligned(64)));

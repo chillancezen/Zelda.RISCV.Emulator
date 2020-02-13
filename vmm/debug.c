@@ -156,7 +156,8 @@ process_cmds_tokens(struct hart * hartptr, int argc, char *argv[])
         return item_found->func(hartptr, argc - lpm_counter, argv + lpm_counter);
     } else {
         // NO ACTION taken
-        printf(ANSI_COLOR_RED"No action\n"ANSI_COLOR_RESET);
+        printf(ANSI_COLOR_RED"No action(enter 'help' for full commands list)\n"
+               ANSI_COLOR_RESET);
     }
     return ACTION_CONTINUE;
 }

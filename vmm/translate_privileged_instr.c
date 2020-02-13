@@ -47,14 +47,12 @@ riscv_ebreak_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 mret_callback(struct hart * hartptr)
 {
-    // PC <= mepc
-    // MIE <= MPIE
-    // current privilege level <= MPP
-    // MPIE <= 1
-    // MPP <= user privilege level
     assert_hart_running_in_mmode(hartptr);
     adjust_mstatus_upon_mret(hartptr);
     adjust_pc_upon_mret(hartptr);
+    // translation cache must be flushed, because adjusted privilege level may
+    // diff in addressing space
+    flush_translation_cache(hartptr);
     
 }
 

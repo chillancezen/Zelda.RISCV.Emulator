@@ -17,7 +17,8 @@ enum RISCV_OPCODE {
     RISCV_OPCODE_OP_IMM = 0x13,
     RISCV_OPCODE_OP = 0x33,
     RISCV_OPCODE_FENCE = 0x0f,
-    RISCV_OPCODE_SUPERVISOR_LEVEL = 0x73
+    RISCV_OPCODE_SUPERVISOR_LEVEL = 0x73, // FIXME: rename to privileged.
+    RISCV_OPCODE_AMO = 0x2f
 };
 
 // FIXME: This is really important, clear zero register for all the registers
@@ -298,4 +299,7 @@ void
 riscv_supervisor_level_instructions_translation_entry(struct prefetch_blob * blob,
                                                       uint32_t instruction);
 
+void
+riscv_amo_instructions_translation_entry(struct prefetch_blob * blob,
+                                         uint32_t instruction);
 #endif

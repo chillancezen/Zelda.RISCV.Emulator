@@ -7,11 +7,6 @@
 #include <string.h>
 #include <mmu.h>
 
-__attribute__((unused)) static void
-mmu_write8(struct hart * hartptr, uint32_t location, uint8_t value)
-{
-    vmwrite8(hartptr, location, value);
-}
 
 static void
 riscv_sb_translator(struct decoding * dec, struct prefetch_blob * blob,
@@ -58,11 +53,6 @@ riscv_sb_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
-__attribute__((unused)) static void
-mmu_write16(struct hart * hartptr, uint32_t location, uint16_t value)
-{
-    vmwrite16(hartptr, location, value);
-}
 
 static void
 riscv_sh_translator(struct decoding * dec, struct prefetch_blob * blob,
@@ -109,12 +99,6 @@ riscv_sh_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
-
-__attribute__((unused)) static void
-mmu_write32(struct hart * hartptr, uint32_t location, uint32_t value)
-{
-    vmwrite32(hartptr, location, value);
-}
 
 static void
 riscv_sw_translator(struct decoding * dec, struct prefetch_blob * blob,

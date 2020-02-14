@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Jie Zheng
+ * Copyright (c) 2019-2020 Jie Zheng
  */
 
 #include <translation.h>
@@ -323,4 +323,5 @@ translation_init(void)
     translators[RISCV_OPCODE_OP] = riscv_arithmetic_instructions_translation_entry;
     translators[RISCV_OPCODE_FENCE] = riscv_fence_instructions_translation_entry;
     translators[RISCV_OPCODE_SUPERVISOR_LEVEL] = riscv_supervisor_level_instructions_translation_entry;
+    translators[RISCV_OPCODE_AMO] = riscv_amo_instructions_translation_entry;
 }

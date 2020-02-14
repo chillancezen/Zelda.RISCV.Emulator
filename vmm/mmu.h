@@ -84,5 +84,30 @@ _(32)
 _(64)
 #undef _
 
+uint8_t
+mmu_read8(struct hart * hartptr, uint32_t location);
+
+uint16_t
+mmu_read16(struct hart * hartptr, uint32_t location);
+
+uint32_t
+mmu_read32(struct hart * hartptr, uint32_t location);
+
+uint32_t
+mmu_read32_aligned(struct hart * hartptr, uint32_t location);
+
+
+
+void
+mmu_write8(struct hart * hartptr, uint32_t location, uint8_t value);
+
+void
+mmu_write16(struct hart * hartptr, uint32_t location, uint16_t value);
+
+void
+mmu_write32(struct hart * hartptr, uint32_t location, uint32_t value);
+
+void
+mmu_write32_aligned(struct hart * hartptr, uint32_t location, uint32_t value);
 
 #endif

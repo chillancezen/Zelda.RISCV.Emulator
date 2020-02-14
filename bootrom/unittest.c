@@ -526,6 +526,22 @@ test_extension_M_instructions(void)
     #endif
 }
 
+static void
+test_amo_instruction(void)
+{
+    // amoadd.w instruction
+    uint32_t target = 0x12345678;
+    uint32_t initial_value = 0;
+    __asm__ volatile(
+                     "amoadd.w %[INIT_VALUE], %[RS2], (%[RS1]);"
+                     :[INIT_VALUE]"=r"(initial_value)
+                     :[RS2]"r"(-0x678), [RS1]"r"(&target)
+                     :"memory");
+    if (initial_value == 0x12345678 && target == 0x12345000) {
+        printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoadd.w rd, rs2, (rs1)\n");
+    }
+}
+
 void
 unit_test(void)
 {
@@ -533,4 +549,5 @@ unit_test(void)
     test_arithmetic_immediate_instruction();
     test_extension_M_instructions();
     test_memory_operation();
+    test_amo_instruction();
 }

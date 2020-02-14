@@ -7,12 +7,6 @@
 #include <string.h>
 #include <mmu.h>
 
-__attribute__((unused)) static uint8_t
-mmu_read8(struct hart * hartptr, uint32_t location)
-{
-    return vmread8(hartptr, location);
-}
-
 static void
 riscv_lb_translator(struct decoding * dec, struct prefetch_blob * blob,
                     uint32_t instruction)
@@ -109,11 +103,6 @@ riscv_lbu_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->next_instruction_to_fetch += 4;
 }
 
-__attribute__((unused)) static uint16_t
-mmu_read16(struct hart * hartptr, uint32_t location)
-{
-    return vmread16(hartptr, location);
-}
 
 static void
 riscv_lh_translator(struct decoding * dec, struct prefetch_blob * blob,
@@ -209,12 +198,6 @@ riscv_lhu_translator(struct decoding * dec, struct prefetch_blob * blob,
         END_PARAM()
     COMMIT_TRANSLATION(lhu_instruction, hartptr, instruction_linear_address);
     blob->next_instruction_to_fetch += 4;
-}
-
-__attribute__((unused)) static uint32_t
-mmu_read32(struct hart * hartptr, uint32_t location)
-{
-    return vmread32(hartptr, location);
 }
 
 static void

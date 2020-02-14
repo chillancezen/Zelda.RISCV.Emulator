@@ -40,4 +40,9 @@
 #define CSR_ADDRESS_MCAUSE              0x342
 #define CSR_ADDRESS_MTVAL               0x343
 #define CSR_ADDRESS_MTVEC               0x305
+
+
+#define CSR_ADDRESS_SIE                 0x104
+#define CSR_ADDRESS_SIP                 0x144
+#define CSR_ADDRESS_SSTATUS             0x100
 #endif

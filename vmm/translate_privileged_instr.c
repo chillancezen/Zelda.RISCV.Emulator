@@ -84,11 +84,51 @@ riscv_mret_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->is_to_stop = 1;
 }
 
+__attribute__((unused)) static void
+sfence_vma_callback(struct hart * hartptr)
+{
+    // FLUSH TLB
+
+    // and finlally, flush translation cache
+    flush_translation_cache(hartptr);
+}
+
+static void
+riscv_sfence_vma_translator(struct decoding * dec, struct prefetch_blob * blob,
+                            uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    PRECHECK_TRANSLATION_CACHE(sfence_vma_instruction, blob);
+    BEGIN_TRANSLATION(sfence_vma_instruction);
+    __asm__ volatile("movq %%r12, %%rdi;"
+                     "movq $sfence_vma_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
+                     "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     TRAP_TO_VMM(sfence_vma_instruction)
+                     :
+                     :
+                     :"memory");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32()
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(sfence_vma_instruction);
+        BEGIN_PARAM(sfence_vma_instruction)
+            instruction_linear_address
+        END_PARAM()
+    COMMIT_TRANSLATION(sfence_vma_instruction, hartptr, instruction_linear_address);
+    blob->is_to_stop = 1;
+}
+
 static void
 riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
                             uint32_t instruction)
 {
-    if (dec->rs2_index == 0x1) {
+    if (((dec->imm >> 5) & 0x7f) == 0x9) {
+        riscv_sfence_vma_translator(dec, blob, instruction);
+    } else if (dec->rs2_index == 0x1) {
         riscv_ebreak_translator(dec, blob, instruction); 
     } else if (dec->rs2_index == 0x2) {
         if ((dec->imm >> 5) == 0x18) {

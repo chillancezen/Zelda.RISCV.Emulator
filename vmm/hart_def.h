@@ -45,4 +45,5 @@
 #define CSR_ADDRESS_SIE                 0x104
 #define CSR_ADDRESS_SIP                 0x144
 #define CSR_ADDRESS_SSTATUS             0x100
+#define CSR_ADDRESS_STVEC               0x105
 #endif

@@ -38,13 +38,27 @@ static struct csr_registery_entry scounteren_csr_entry = {
 
 
 
+#include <mmu.h>
+#include <mmu_tlb.h>
 
 static void
 csr_satp_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
+    uint32_t old_blob = csr->csr_blob;
     csr->csr_blob = value;
     log_debug("hart id:%d, csr:satp write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
+    // THE PC IS CHANGED TO ITS VIRTUAL ADDRESS
+    if (csr->csr_blob & 0x80000000 && (!(old_blob & 0x80000000))) {
+        uint32_t va = 0;
+        int rc = pa_to_va(hartptr, hartptr->pc, hartptr->itlb,hartptr->itlb_cap,
+                          &va);
+        ASSERT(!rc);
+        hartptr->pc = va;
+    }
+    invalidate_tlb(hartptr->itlb, hartptr->itlb_cap);
+    invalidate_tlb(hartptr->dtlb, hartptr->dtlb_cap);
+    flush_translation_cache(hartptr);
 }
 
 static uint32_t
@@ -62,7 +76,7 @@ csr_satp_reset(struct hart *hartptr, struct csr_entry * csr)
 }
 
 static struct csr_registery_entry satp_csr_entry = {
-    .csr_addr = 0x180,
+    .csr_addr = CSR_ADDRESS_SATP,
     .csr_registery = {
         .wpri_mask = WPRI_MASK_ALL,
         .reset = csr_satp_reset,

@@ -10,12 +10,23 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <debug.h>
+#include <mmu_tlb.h>
 
 static void
 device_init(struct virtual_machine * vm)
 {
     clint_init(vm);
     uart_init();
+}
+
+static void
+hart_tlb_init(struct hart * hartptr)
+{
+    hartptr->itlb = aligned_alloc(64, sizeof(struct tlb_entry) * hartptr->itlb_cap);
+    hartptr->dtlb = aligned_alloc(64, sizeof(struct tlb_entry) * hartptr->dtlb_cap);
+    ASSERT(hartptr->itlb && hartptr->dtlb);
+    invalidate_tlb(hartptr->itlb, hartptr->itlb_cap);
+    invalidate_tlb(hartptr->dtlb, hartptr->dtlb_cap);
 }
 
 static void
@@ -42,6 +53,18 @@ cpu_init(struct virtual_machine * vm)
         hart_init(hartptr, idx);
         hartptr->pc = pc_on_reset;
         hartptr->vmptr = vm;
+    }
+
+    const char * itlb_size_string = ini_get(vm->ini_config, "cpu", "itlb_size");
+    const char * dtlb_size_string = ini_get(vm->ini_config, "cpu", "dtlb_size");
+    uint32_t itlb_size = strtol(itlb_size_string, NULL, 16);
+    uint32_t dtlb_size = strtol(dtlb_size_string, NULL, 16);
+    log_debug("itlb size:%d dtlb size:%d\n", itlb_size, dtlb_size);
+    for (idx = 0; idx < vm->nr_harts; idx++) {
+        struct hart * hartptr = hart_by_id(vm, idx);
+        hartptr->itlb_cap = itlb_size;
+        hartptr->dtlb_cap = dtlb_size;
+        hart_tlb_init(hartptr);
     }
 }
 

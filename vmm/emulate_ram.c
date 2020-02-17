@@ -5,10 +5,18 @@
 #include <vm.h>
 #include <pm_region.h>
 
+static void *
+ram_direct(uint64_t addr, struct hart * hartptr,
+           struct pm_region_operation * pmr)
+{
+    struct virtual_machine * vm = hartptr->vmptr;
+    void * memory_access_base = vm->main_mem_host_base + (addr - pmr->addr_low);
+    return memory_access_base;
+}
+
 static uint64_t
-ram_read(uint64_t addr, int access_size,
-                        struct hart * hartptr,
-                        struct pm_region_operation * pmr)
+ram_read(uint64_t addr, int access_size, struct hart * hartptr,
+         struct pm_region_operation * pmr)
 {
     uint64_t val = 0;
     struct virtual_machine * vm = hartptr->vmptr;
@@ -32,9 +40,8 @@ ram_read(uint64_t addr, int access_size,
 }
 
 static void
-ram_write(uint64_t addr, int access_size, uint64_t value,
-                        struct hart * hartptr,
-                        struct pm_region_operation * pmr)
+ram_write(uint64_t addr, int access_size, uint64_t value, struct hart * hartptr,
+          struct pm_region_operation * pmr)
 {
     struct virtual_machine * vm = hartptr->vmptr;
     void * memory_access_base = vm->main_mem_host_base + (addr - pmr->addr_low);
@@ -76,6 +83,7 @@ ram_init(struct virtual_machine * vm)
         .addr_high = vm->main_mem_base + vm->main_mem_size,
         .pmr_read = ram_read,
         .pmr_write = ram_write,
+        .pmr_direct = ram_direct,
         .pmr_desc = "main.memory"
     };
     register_pm_region_operation(&main_memory_pmr);

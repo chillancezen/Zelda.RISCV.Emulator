@@ -6,6 +6,8 @@
 #include <util.h>
 #include <debug.h>
 #include <hart_util.h>
+#include <mmu.h>
+#include <mmu_tlb.h>
 
 __attribute__((unused)) static void
 ebreak_callback(struct hart * hartptr)
@@ -87,8 +89,9 @@ riscv_mret_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 sfence_vma_callback(struct hart * hartptr)
 {
-    // FLUSH TLB
-
+    // flush tlb cache
+    invalidate_tlb(hartptr->itlb, hartptr->itlb_cap);
+    invalidate_tlb(hartptr->dtlb, hartptr->dtlb_cap);
     // and finlally, flush translation cache
     flush_translation_cache(hartptr);
 }

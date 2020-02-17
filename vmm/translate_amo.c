@@ -70,6 +70,9 @@ riscv_amo_instructions_translation_entry(struct prefetch_blob * blob,
     struct decoding dec;
     instruction_decoding_per_type(&dec, instruction, ENCODING_TYPE_R);
     uint8_t funct5 = dec.funct7 >> 2;
+    if (!per_funct5_handlers[funct5]) {
+        printf("instruction_linear_address:%x\n", blob->next_instruction_to_fetch);
+    }
     ASSERT(per_funct5_handlers[funct5]);
     per_funct5_handlers[funct5](&dec, blob, instruction);
 }

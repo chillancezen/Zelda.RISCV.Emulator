@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <util.h>
 
-
 struct integer_register_profile {
     REGISTER_TYPE zero;
     REGISTER_TYPE ra;
@@ -60,6 +59,7 @@ struct status_control_blob {
     uint32_t mpp:2;
 };
 
+struct tlb_entry;
 struct hart {
     struct integer_register_profile registers __attribute__((aligned(64)));
     REGISTER_TYPE pc;
@@ -83,6 +83,12 @@ struct hart {
     struct status_control_blob status;
 
     uint32_t privilege_level:2;
+
+    struct tlb_entry * itlb;
+    struct tlb_entry * dtlb;
+    uint32_t itlb_cap;
+    uint32_t dtlb_cap;
+
 }__attribute__((aligned(64)));
 
 

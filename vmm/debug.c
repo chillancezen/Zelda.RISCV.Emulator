@@ -59,6 +59,53 @@ debug_continue(struct hart * hartptr, int argc, char *argv[])
     return ACTION_STOP;
 }
 
+#include <pm_region.h>
+static int
+inspect_memory(struct hart * hartptr, int argc, char *argv[])
+{
+    if (argc != 2) {
+        goto error_usage; 
+    }
+    uint32_t low_addr = strtol(argv[0], NULL, 16);
+    uint32_t high_addr = strtol(argv[1], NULL, 16);
+    if (low_addr > high_addr) {
+        printf(ANSI_COLOR_RED"memory addresses don't fit\n"ANSI_COLOR_RESET);
+        goto error_usage;
+    }
+    
+    struct pm_region_operation * pmr1 = search_pm_region_callback(low_addr);
+    struct pm_region_operation * pmr2 = search_pm_region_callback(high_addr);
+    if (!pmr1 || pmr1 != pmr2) {
+        printf(ANSI_COLOR_RED"memory region doesnt exist or two addresses "
+               "do not reside in same pm region\n"ANSI_COLOR_RESET);
+        goto error_usage;
+    }
+    if (!pmr1->pmr_direct) {
+        printf(ANSI_COLOR_RED"memory region does't support direct fetch\n"ANSI_COLOR_RESET);
+        goto error_usage;
+    }
+    uint32_t * pm_low =  pmr1->pmr_direct(low_addr, hartptr, pmr1);
+    uint32_t * pm_high = pmr1->pmr_direct(high_addr, hartptr, pmr1);
+    ASSERT(pm_low <= pm_high);
+    int counter = 0;
+    int dwords_per_line = 8;
+    printf("host memory range:[%p - %p]\n", pm_low, pm_low);
+    for (; pm_low < pm_high; pm_low += 1, counter++) {
+        if ((counter % dwords_per_line) == 0) {
+            printf("0x%08x: ",low_addr + counter * 4);
+        }
+        printf("%08x ", *pm_low);
+        if (((counter + 1) % dwords_per_line) == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+    return ACTION_CONTINUE;
+    error_usage:
+        printf(ANSI_COLOR_RED"example: /x 0x0000001 0x2000000\n"ANSI_COLOR_RESET);
+        return ACTION_CONTINUE;
+}
+
 static int
 debug_help(struct hart * hartptr, int argc, char *argv[]);
 
@@ -87,6 +134,11 @@ static struct cmd_registery_item cmds_items[] = {
         .cmd_prefixs = {"break", NULL},
         .func = add_breakpoint_command,
         .desc = "add a break by following the address of the target address"
+    },
+    {
+        .cmd_prefixs = {"/x", NULL},
+        .func = inspect_memory,
+        .desc = "dump physical memory segment"
     },
     {
         .cmd_prefixs = {"help", NULL},

@@ -166,7 +166,7 @@ static void
 prefetch_one_instruction(struct prefetch_blob * blob)
 {
     struct hart * hartptr = blob->opaque;
-    uint32_t instruction = vmread32(hartptr, blob->next_instruction_to_fetch);
+    uint32_t instruction = mmu_instruction_read32(hartptr, blob->next_instruction_to_fetch);
     uint8_t opcode = instruction & 0x7f;
     instruction_translator per_category_translator = translators[opcode];
     // NOTE: if ASSERTion takes true, it indicates the instruction is not recognized

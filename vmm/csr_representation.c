@@ -125,7 +125,8 @@ riscv_generic_csr_instructions_translator(struct decoding * dec,
                      RESTORE_GUEST_CONTEXT_SWITCH_REGS()
                      RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
-                     END_INSTRUCTION(csr_instructions)
+                     TRAP_TO_VMM(csr_instructions)
+                     //END_INSTRUCTION(csr_instructions)
                      :
                      :
                      :"memory");
@@ -137,6 +138,7 @@ riscv_generic_csr_instructions_translator(struct decoding * dec,
             instruction
         END_PARAM()
     COMMIT_TRANSLATION(csr_instructions, hartptr, instruction_linear_address);
-    blob->next_instruction_to_fetch += 4;
+    //blob->next_instruction_to_fetch += 4;
+    blob->is_to_stop = 1;
 }
 

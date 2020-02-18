@@ -51,5 +51,9 @@
 #define CSR_ADDRESS_SCAUSE              0x142
 #define CSR_ADDRESS_STVAL               0x143
 #define CSR_ADDRESS_SEPC                0x141
+#define CSR_ADDRESS_SSCRATCH            0x140
+
+#define CSR_ADDRESS_TIME                0xC01
+#define CSR_ADDRESS_TIMEH               0xC81
 
 #endif

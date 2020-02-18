@@ -5,6 +5,7 @@
 #include <translation.h>
 #include <util.h>
 #include <string.h>
+#include <hart_exception.h>
 
 static instruction_sub_translator per_funct3_handlers[8];
 
@@ -211,6 +212,9 @@ riscv_div_translator(struct decoding * dec,
                      "shl $0x2, %%esi;"
                      "addq %%r15, %%rsi;"
                      "movl (%%rsi), %%ebx;"// RS2 XXX: divisor must be non-zero.
+                     "movl %%ebx, %%r8d;"
+                     "cmp $0x0, %%r8d;"
+                     "jz 1f;"
                      "idiv %%ebx;" // eax<= quotient, edx<= remainder
                      "movl "PIC_PARAM(2)", %%edi;"
                      "shl $0x2, %%edi;"
@@ -219,6 +223,10 @@ riscv_div_translator(struct decoding * dec,
                      RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(div_instruction)
+                     "1: movq %%r12, %%rdi;"
+                     "movl $0x2, %%esi;"
+                     "movq $raise_exception, %%rax;"
+                     "jmpq *%%rax;" 
                      :
                      :
                      :"memory");

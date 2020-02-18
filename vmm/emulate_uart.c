@@ -79,11 +79,24 @@ build_uart_fdt_node(struct fdt_build_blob * blob)
     sprintf(node_name, "uart@%x", UART_16550_BASE);
     fdt_begin_node(blob, node_name);
     uint32_t clock_frequency = BIG_ENDIAN32(0x00384000);
+    uint32_t interrupts = BIG_ENDIAN32(0x0000000a);
+    uint32_t interrupts_parent = BIG_ENDIAN32(0x0000000d);
+    fdt_prop(blob, "interrupts", 4, &interrupts);
+    fdt_prop(blob, "interrupt-parent", 4, &interrupts_parent);
     fdt_prop(blob, "clock-frequency", 4, &clock_frequency);
     fdt_prop(blob, "compatible", strlen("ns16550a") + 1, "ns16550a");
     uint32_t regs[4] = {BIG_ENDIAN32(0), BIG_ENDIAN32(UART_16550_BASE),
                         BIG_ENDIAN32(0), BIG_ENDIAN32(0x100)};
     fdt_prop(blob, "reg", 16, regs);
+    fdt_end_node(blob);
+
+    // chosen node
+    fdt_begin_node(blob, "chosen");
+    char * bootarg = "";
+    fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
+    char stdout_path[64];
+    sprintf(stdout_path, "/uart@%x", UART_16550_BASE);
+    fdt_prop(blob, "stdout-path", strlen(stdout_path) + 1, stdout_path);
     fdt_end_node(blob);
 }
 

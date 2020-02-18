@@ -125,6 +125,59 @@ riscv_sfence_vma_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->is_to_stop = 1;
 }
 
+#include <hart_exception.h>
+__attribute__((unused)) static void
+ecall_callback(struct hart * hartptr)
+{
+    uint8_t exception = EXCEPTION_ECALL_FROM_MMODE;
+    switch(hartptr->privilege_level)
+    {
+        case PRIVILEGE_LEVEL_MACHINE:
+            exception = EXCEPTION_ECALL_FROM_MMODE;
+            break;
+        case PRIVILEGE_LEVEL_SUPERVISOR:
+            exception = EXCEPTION_ECALL_FROM_SMODE;
+            break;
+        case PRIVILEGE_LEVEL_USER:
+            exception = EXCEPTION_ECALL_FROM_UMODE;
+            break;
+        default:
+            __not_reach();
+            break;
+    }
+    raise_exception(hartptr, exception);
+    
+}
+
+static void
+riscv_ecall_translator(struct decoding * dec, struct prefetch_blob * blob,
+                       uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    PRECHECK_TRANSLATION_CACHE(ecall_instruction, blob);
+    BEGIN_TRANSLATION(ecall_instruction);
+    __asm__ volatile("movq %%r12, %%rdi;"
+                     "movq $ecall_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
+                     "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     TRAP_TO_VMM(ecall_instruction)
+                     :
+                     :
+                     :"memory");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32()
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(ecall_instruction);
+        BEGIN_PARAM(ecall_instruction)
+            instruction_linear_address
+        END_PARAM()
+    COMMIT_TRANSLATION(ecall_instruction, hartptr, instruction_linear_address);
+    blob->is_to_stop = 1;
+}
+
 static void
 riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
                             uint32_t instruction)
@@ -139,6 +192,8 @@ riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
         } else {
             __not_reach();
         }
+    } else if (dec->rs2_index == 0x0) {
+        riscv_ecall_translator(dec, blob, instruction); 
     }else {
         log_fatal("can not translate:0x%x at 0x%x\n", instruction, blob->next_instruction_to_fetch);
         __not_reach();

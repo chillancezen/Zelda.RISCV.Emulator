@@ -18,7 +18,7 @@ riscv_generic_csr_callback(struct hart * hartptr, uint64_t instruction)
     
     if (!csr->is_valid) {
         // This must be a panic in case we miss some CSRs
-        log_fatal("mcsr 0x%x is not implemented\n", dec.imm & 0xfff);
+        log_fatal("csr 0x%x is not implemented\n", dec.imm & 0xfff);
         PANIC(hartptr);
     }
 

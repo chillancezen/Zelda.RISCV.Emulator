@@ -89,6 +89,7 @@ struct hart {
     uint32_t itlb_cap;
     uint32_t dtlb_cap;
 
+    uint64_t tsc;
 }__attribute__((aligned(64)));
 
 

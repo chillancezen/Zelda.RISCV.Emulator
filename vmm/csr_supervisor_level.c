@@ -8,15 +8,15 @@ static void
 csr_scounteren_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:scounteren write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:scounteren write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
 }
 
 static uint32_t
 csr_scounteren_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:scounteren read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:scounteren read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
     return csr->csr_blob;
 }
 
@@ -46,8 +46,10 @@ csr_satp_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     //uint32_t old_blob = csr->csr_blob;
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:satp write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:satp write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+    // UPDATE: The PC is not changed, later we have to raise an exception
+    // if it fails to translate the address.
     // THE PC IS CHANGED TO ITS VIRTUAL ADDRESS
     #if 0
     if (csr->csr_blob & 0x80000000 && (!(old_blob & 0x80000000))) {
@@ -66,8 +68,8 @@ csr_satp_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 static uint32_t
 csr_satp_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:satp read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:satp read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
     return csr->csr_blob;
 }
 
@@ -95,8 +97,8 @@ csr_sie_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
     hartptr->ienable.bits.ssi = (value >> 1) & 0x1;
     hartptr->ienable.bits.sti = (value >> 5) & 0x1;
     hartptr->ienable.bits.sei = (value >> 9) & 0x1;
-    log_debug("hart id:%d, csr:sie write 0x:%x\n",
-              hartptr->hart_id, value);
+    log_trace("hart id:%d pc:%08x, csr:sie write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, value);
 }
 
 static uint32_t
@@ -109,8 +111,8 @@ csr_sie_read(struct hart *hartptr, struct csr_entry *csr)
     blob |= (uint32_t)(hartptr->ienable.bits.sti) << 5;
     blob |= (uint32_t)(hartptr->ienable.bits.uei) << 8;
     blob |= (uint32_t)(hartptr->ienable.bits.sei) << 9;
-    log_debug("hart id:%d, csr:sie read:0x%x\n",
-              hartptr->hart_id, blob);
+    log_trace("hart id:%d pc:%08x, csr:sie read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, blob);
     return blob;
 }
 
@@ -130,8 +132,8 @@ csr_sip_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     // ONLY SSIP is writable.
     hartptr->ipending.bits.ssi = (value >> 1) & 0x1;
-    log_debug("hart id:%d, csr:sip write 0x:%x\n",
-              hartptr->hart_id, value);
+    log_trace("hart id:%d pc:%08x, csr:sip write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, value);
 }
 
 static uint32_t
@@ -141,8 +143,8 @@ csr_sip_read(struct hart *hartptr, struct csr_entry *csr)
     blob |= (uint32_t)(hartptr->ipending.bits.ssi) << 1;
     blob |= (uint32_t)(hartptr->ipending.bits.sti) << 5;
     blob |= (uint32_t)(hartptr->ipending.bits.sei) << 9;
-    log_debug("hart id:%d, csr:sip read:0x%x\n",
-              hartptr->hart_id, blob);
+    log_trace("hart id:%d pc:%08x, csr:sip read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, blob);
     return blob;
 }
 
@@ -166,8 +168,8 @@ csr_sstatus_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
     hartptr->status.upie = (value >> 4) & 0x1;
     hartptr->status.spie = (value >> 5) & 0x1;
     hartptr->status.spp = (value >> 8) & 0x1;
-    log_debug("hart id:%d, csr:sstatus write 0x:%x\n",
-              hartptr->hart_id, value);
+    log_trace("hart id:%d pc:%08x, csr:sstatus write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, value);
 }
 
 static uint32_t
@@ -179,8 +181,8 @@ csr_sstatus_read(struct hart *hartptr, struct csr_entry *csr)
     blob |= (uint32_t)(hartptr->status.upie) << 4;
     blob |= (uint32_t)(hartptr->status.spie) << 5;
     blob |= (uint32_t)(hartptr->status.spp) << 8;
-    log_debug("hart id:%d, csr:sstatus read:0x%x\n",
-              hartptr->hart_id, blob);
+    log_trace("hart id:%d pc:%08x, csr:sstatus read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, blob);
     return blob;
 }
 
@@ -198,15 +200,15 @@ static void
 csr_stvec_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:stvec write 0x:%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:stvec write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
 }
 
 static uint32_t
 csr_stvec_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:stvec read:0x%x\n",
-              hartptr->hart_id, csr->csr_blob);
+    log_trace("hart id:%d pc:%08x, csr:stvec read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
     return csr->csr_blob;
 }
 
@@ -226,6 +228,37 @@ static struct csr_registery_entry stvec_csr_entry = {
     }
 };
 
+static void
+csr_sscratch_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_trace("hart id:%d pc:%08x, csr:sscratch write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+}
+
+static uint32_t
+csr_sscratch_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_trace("hart id:%d pc:%08x, csr:sscratch read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_sscratch_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry sscratch_csr_entry = {
+    .csr_addr = CSR_ADDRESS_SSCRATCH,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_sscratch_reset,
+        .read = csr_sscratch_read,
+        .write = csr_sscratch_write
+    }
+};
 __attribute__((constructor)) static void
 csr_supervisor_level_init(void)
 {
@@ -235,5 +268,6 @@ csr_supervisor_level_init(void)
     register_csr_entry(&sip_csr_entry);
     register_csr_entry(&sstatus_csr_entry);
     register_csr_entry(&stvec_csr_entry);
+    register_csr_entry(&sscratch_csr_entry);
 }
 

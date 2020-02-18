@@ -78,7 +78,7 @@ mmu_instruction_read32(struct hart * hartptr, uint32_t instruction_va)
 {
     struct csr_entry * csr = &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SATP];
     // MAKE SURE PAGING IS ENABLED IN CURRENT MODE
-    if (hartptr->privilege_level <= PRIVILEGE_LEVEL_MACHINE &&
+    if (hartptr->privilege_level < PRIVILEGE_LEVEL_MACHINE &&
         csr->csr_blob & 0x80000000) {
         struct tlb_entry * entry = VA_TO_TLB_ENTRY(hartptr->itlb,
                                                    hartptr->itlb_cap,

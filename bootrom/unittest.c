@@ -539,6 +539,64 @@ test_amo_instruction(void)
                      :"memory");
     if (initial_value == 0x12345678 && target == 0x12345000) {
         printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoadd.w rd, rs2, (rs1)\n");
+    } else {
+        printk(ANSI_COLOR_RED"PASS"ANSI_COLOR_RESET" amoadd.w rd, rs2, (rs1)\n");
+    }
+
+    // amoor.w instruction
+    target = 0x12345678;
+    initial_value = 0;
+    __asm__ volatile(
+                     "amoor.w %[INIT_VALUE], %[RS2], (%[RS1]);"
+                     :[INIT_VALUE]"=r"(initial_value)
+                     :[RS2]"r"(0xfff), [RS1]"r"(&target)
+                     :"memory");
+    if (initial_value == 0x12345678 && target == 0x12345fff) {
+        printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoor.w rd, rs2, (rs1)\n");
+    } else {
+        printk(ANSI_COLOR_RED"PASS"ANSI_COLOR_RESET" amoor.w rd, rs2, (rs1)\n");
+    }
+
+    // amoxor.w instruction
+    target = 0x12345678;
+    initial_value = 0;
+    __asm__ volatile(
+                     "amoxor.w %[INIT_VALUE], %[RS2], (%[RS1]);"
+                     :[INIT_VALUE]"=r"(initial_value)
+                     :[RS2]"r"(0x679), [RS1]"r"(&target)
+                     :"memory");
+    if (initial_value == 0x12345678 && target == 0x12345001) {
+        printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoxor.w rd, rs2, (rs1)\n");
+    } else {
+        printk(ANSI_COLOR_RED"PASS"ANSI_COLOR_RESET" amoxor.w rd, rs2, (rs1)\n");
+    }
+
+    // amoswap.w instruction
+    target = 0x12345678;
+    initial_value = 0;
+    __asm__ volatile(
+                     "amoswap.w %[INIT_VALUE], %[RS2], (%[RS1]);"
+                     :[INIT_VALUE]"=r"(initial_value)
+                     :[RS2]"r"(0x87654321), [RS1]"r"(&target)
+                     :"memory");
+    if (initial_value == 0x12345678 && target == 0x87654321) {
+        printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoswap.w rd, rs2, (rs1)\n");
+    } else {
+        printk(ANSI_COLOR_RED"PASS"ANSI_COLOR_RESET" amoswap.w rd, rs2, (rs1)\n");
+    }
+
+    // amoand.w instruction
+    target = 0x12345678;
+    initial_value = 0;
+    __asm__ volatile(
+                     "amoand.w %[INIT_VALUE], %[RS2], (%[RS1]);"
+                     :[INIT_VALUE]"=r"(initial_value)
+                     :[RS2]"r"(0xfff0000f), [RS1]"r"(&target)
+                     :"memory");
+    if (initial_value == 0x12345678 && target == 0x12300008) {
+        printk(ANSI_COLOR_GREEN"PASS"ANSI_COLOR_RESET" amoand.w rd, rs2, (rs1)\n");
+    } else {
+        printk(ANSI_COLOR_RED"PASS"ANSI_COLOR_RESET" amoand.w rd, rs2, (rs1)\n");
     }
 }
 

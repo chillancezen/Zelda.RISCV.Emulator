@@ -111,8 +111,9 @@ void
 raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
                uint32_t cause, uint32_t tval)
 {
-    log_trace("trap to privilege:%d cause:0x%08x, tval:0x%08x\n",
-              target_privilege_level, cause, tval);
+    log_trace("trap to privilege:%d cause:0x%08x, tval:0x%08x pc:%08x(current:%d)\n",
+              target_privilege_level, cause, tval, hartptr->pc,
+              hartptr->privilege_level);
     if (target_privilege_level == PRIVILEGE_LEVEL_MACHINE) {
         setup_mmode_trap(hartptr, cause, tval);
     } else {

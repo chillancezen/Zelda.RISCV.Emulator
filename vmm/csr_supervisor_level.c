@@ -44,11 +44,12 @@ static struct csr_registery_entry scounteren_csr_entry = {
 static void
 csr_satp_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    uint32_t old_blob = csr->csr_blob;
+    //uint32_t old_blob = csr->csr_blob;
     csr->csr_blob = value;
     log_debug("hart id:%d, csr:satp write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
     // THE PC IS CHANGED TO ITS VIRTUAL ADDRESS
+    #if 0
     if (csr->csr_blob & 0x80000000 && (!(old_blob & 0x80000000))) {
         uint32_t va = 0;
         int rc = pa_to_va(hartptr, hartptr->pc, hartptr->itlb,hartptr->itlb_cap,
@@ -56,6 +57,7 @@ csr_satp_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
         ASSERT(!rc);
         hartptr->pc = va;
     }
+    #endif
     invalidate_tlb(hartptr->itlb, hartptr->itlb_cap);
     invalidate_tlb(hartptr->dtlb, hartptr->dtlb_cap);
     flush_translation_cache(hartptr);

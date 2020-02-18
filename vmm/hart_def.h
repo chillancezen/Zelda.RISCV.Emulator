@@ -47,4 +47,9 @@
 #define CSR_ADDRESS_SSTATUS             0x100
 #define CSR_ADDRESS_STVEC               0x105
 #define CSR_ADDRESS_SATP                0x180
+
+#define CSR_ADDRESS_SCAUSE              0x142
+#define CSR_ADDRESS_STVAL               0x143
+#define CSR_ADDRESS_SEPC                0x141
+
 #endif

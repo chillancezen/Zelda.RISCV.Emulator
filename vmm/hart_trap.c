@@ -52,6 +52,36 @@ setup_mmode_trap(struct hart * hartptr, uint32_t cause, uint32_t tval)
     }
 }
 
+static void
+setup_smode_trap(struct hart * hartptr, uint32_t cause, uint32_t tval)
+{
+    struct csr_entry * csr_scause =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SCAUSE];
+    csr_scause->csr_blob = cause;
+    struct csr_entry * csr_stval =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_STVAL];
+    csr_stval->csr_blob = tval;
+    struct csr_entry * csr_sepc =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SEPC];
+    csr_sepc->csr_blob = hartptr->pc;
+
+    hartptr->status.spp = hartptr->privilege_level;
+    hartptr->privilege_level = PRIVILEGE_LEVEL_SUPERVISOR;
+    hartptr->status.spie = hartptr->status.sie;
+    hartptr->status.sie = 0;
+
+    struct csr_entry * csr_stvec =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_STVEC];
+    uint32_t stvec = csr_stvec->csr_blob;
+    uint32_t trap_mode = stvec & 0x1;
+    if (!trap_mode || !(cause & 0x80000000)) {
+        hartptr->pc = stvec & (~3);
+    } else {
+        uint32_t vector = cause & 0x7fffffff;
+        hartptr->pc = (stvec & (~3)) + vector * 4;
+    }
+}
+
 extern void vmm_entry_point(void);
 
 static void
@@ -81,12 +111,14 @@ void
 raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
                uint32_t cause, uint32_t tval)
 {
+    log_trace("trap to privilege:%d cause:0x%08x, tval:0x%08x\n",
+              target_privilege_level, cause, tval);
     if (target_privilege_level == PRIVILEGE_LEVEL_MACHINE) {
         setup_mmode_trap(hartptr, cause, tval);
     } else {
         // WE DO NOT SUPPORT USER MODE INTERRUPT
         ASSERT(target_privilege_level == PRIVILEGE_LEVEL_SUPERVISOR);
-        __not_reach();
+        setup_smode_trap(hartptr, cause, tval);;
     }
 
     // XXX: when trap is taken, the addressing manner may chnage, so

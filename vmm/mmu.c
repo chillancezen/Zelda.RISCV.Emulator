@@ -67,14 +67,11 @@ mmu_write32_aligned(struct hart * hartptr, uint32_t location, uint32_t value)
 
 /*
  * CAVEATS:
- *
+ * https://github.com/riscv/riscv-isa-manual/issues/486
  * c0000134:   18061073            csrw    satp,a2
  * c0000138:   12000073            sfence.vma
  * c000013c:   00008067            ret
  *
- * the instruction sequence above shows how instruction prefetch is delayed until
- * first branch/jump is executed. we call it flat-prefetch window.
- * during the window is open, we don't prefetch instructions using paging structure.
  */
 uint32_t
 mmu_instruction_read32(struct hart * hartptr, uint32_t instruction_va)
@@ -94,9 +91,7 @@ mmu_instruction_read32(struct hart * hartptr, uint32_t instruction_va)
                                     instruction_va);
         }
         if (!entry) {
-            // FIXME: RAISE AN EXCEPTION HERE
-            // THIS IS THE WORKAROUND FOR FLAT-PREFETCH WINDOW
-            //return direct_read32(hartptr, instruction_va);
+            raise_exception(hartptr, EXCEPTION_INSTRUCTION_PAGE_FAULT);
             __not_reach();
         }
         return entry->pmr->pmr_read(entry->pa_tag | ((instruction_va & ~(entry->page_mask))),

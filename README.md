@@ -48,8 +48,8 @@ The system level emulator which utilizes dynamic binary translation for RISCV IS
 [UART16550] Memory: 1027164K/1044480K available (4827K kernel code, 167K rwdata, 869K rodata, 194K init, 215K bss, 17316K reserved, 0K cma-reserved)
 [UART16550] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
 [UART16550] rcu: Hierarchical RCU implementation.
-[UART16550] rcu: 	RCU event tracing is enabled.
-[UART16550] rcu: 	RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=1.
+[UART16550] rcu:    RCU event tracing is enabled.
+[UART16550] rcu:    RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=1.
 [UART16550] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
 [UART16550] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
 [UART16550] NR_IRQS: 0, nr_irqs: 0, preallocated irqs: 0
@@ -62,7 +62,6 @@ The system level emulator which utilizes dynamic binary translation for RISCV IS
 [UART16550] pid_max: default: 32768 minimum: 301
 [UART16550] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
 [UART16550] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
-[UART16550] before: arch_call_rest_init
 [UART16550] rcu: Hierarchical SRCU implementation.
 [UART16550] smp: Bringing up secondary CPUs ...
 [UART16550] smp: Brought up 1 node, 1 CPU
@@ -72,23 +71,43 @@ The system level emulator which utilizes dynamic binary translation for RISCV IS
 [UART16550] futex hash table entries: 256 (order: 2, 16384 bytes, linear)
 [UART16550] NET: Registered protocol family 16
 [UART16550] vgaarb: loaded
-[UART16550] Oops - illegal instruction [#1]
-[UART16550] dules linked in:
-[UART16550] U: 0 PID: 11 Comm: migration/0 Not tainted 5.4.0 #43
-[UART16550] sepc: c00d0a9c ra : c00d0b50 sp : fec7fe80
-[UART16550]  gp : c05ea7b8 tp : fec80000 t0 : fec03760
-[UART16550]  t1 : 0000038e t2 : 0000ffff s0 : fec7fe90
-[UART16550]  s1 : fec65e5c a0 : c05eaad4 a1 : 00000000
-[UART16550]  a2 : 00000000 a3 : 00000001 a4 : 00000000
-[UART16550]  a5 : 00000000 a6 : 00000000 a7 : 00000000
-[UART16550]  s2 : 00000000 s3 : ffffffff s4 : c05eaad4
-[UART16550]  s5 : 00000003 s6 : 00000002 s7 : 00000004
-[UART16550]  s8 : 00000001 s9 : 00000001 s10: 00000000
-[UART16550]  s11: fec65e48 t3 : ffffffff t4 : ffffffff
-[UART16550]  t5 : 000019d3 t6 : 00000000
-[UART16550] sstatus: 00000120 sbadaddr: 00000000 scause: 00000002
-[UART16550] ---[ end trace f1ba0ddfcd88fd78 ]---
-[UART16550] note: migration/0[11] exited with preempt_count 1
+[UART16550] clocksource: Switched to clocksource riscv_clocksource
+[UART16550] NET: Registered protocol family 2
+[UART16550] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 6144 bytes, linear)
+[UART16550] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[UART16550] TCP bind hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[UART16550] TCP: Hash tables configured (established 8192 bind 8192)
+[UART16550] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
+[UART16550] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
+[UART16550] NET: Registered protocol family 1
+[UART16550] PCI: CLS 0 bytes, default 64
+[UART16550] workingset: timestamp_bits=30 max_order=18 bucket_order=0
+[UART16550] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+[UART16550] io scheduler mq-deadline registered
+[UART16550] io scheduler kyber registered
+[UART16550] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+[UART16550] 10000000.uart: ttyS0 at MMIO 0x10000000 (irq = 0, base_baud = 230400) is a 16550A
+[UART16550] loop: module loaded
+[UART16550] NET: Registered protocol family 10
+[UART16550] Segment Routing with IPv6
+[UART16550] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[UART16550] NET: Registered protocol family 17
+[UART16550] S: Cannot open root device "(null)" or unknown-block(0,0): error -6
+[UART16550] ease append a correct "root=" boot option; here are the available partitions:
+[UART16550] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+[UART16550] U: 0 PID: 1 Comm: swapper/0 Not tainted 5.4.0 #45
+[UART16550] Call Trace:
+[UART16550] c0033178>] walk_stackframe+0x0/0x108
+[UART16550] c00333b8>] show_stack+0x3c/0x50
+[UART16550] c04c4358>] dump_stack+0x88/0xb4
+[UART16550] c00399e8>] panic+0x11c/0x2bc
+[UART16550] c0001460>] mount_block_root+0x270/0x330
+[UART16550] c00015b4>] mount_root+0x94/0xac
+[UART16550] c000171c>] prepare_namespace+0x150/0x1ac
+[UART16550] c0000fbc>] kernel_init_freeable+0x1dc/0x214
+[UART16550] c04e058c>] kernel_init+0x1c/0x130
+[UART16550] c0031dd0>] ret_from_exception+0x0/0x10
+[UART16550] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0) ]---
 ```
 
 ## CORE FEATURE

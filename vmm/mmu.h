@@ -57,6 +57,7 @@ int
 walk_page_table(struct hart * hartptr, uint32_t va, struct tlb_entry * tlb,
                 int tlb_cap);
 
+// FIXME: raise exception if address is not naturally aligned.
 #define _(_size)                                                               \
 __attribute__((always_inline)) static inline uint##_size##_t                   \
 vmread##_size (struct hart * hartptr, uint32_t linear_address)                 \
@@ -101,7 +102,7 @@ vmwrite##_size (struct hart * hartptr, uint32_t linear_address,                \
 {                                                                              \
     struct csr_entry * csr =                                                   \
         &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SATP];           \
-    if (hartptr->privilege_level < PRIVILEGE_LEVEL_MACHINE &&                 \
+    if (hartptr->privilege_level < PRIVILEGE_LEVEL_MACHINE &&                  \
         csr->csr_blob & 0x80000000) {                                          \
         struct tlb_entry * entry = VA_TO_TLB_ENTRY(hartptr->dtlb,              \
                                                    hartptr->dtlb_cap,          \

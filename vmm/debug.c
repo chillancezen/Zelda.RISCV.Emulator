@@ -106,6 +106,74 @@ inspect_memory(struct hart * hartptr, int argc, char *argv[])
         return ACTION_CONTINUE;
 }
 
+#include <mmu.h>
+
+static int
+inspect_virtual_memory(struct hart * hartptr, int argc, char *argv[])
+{
+    if (argc != 2) {
+        goto error_usage;
+    }
+    uint32_t low_addr = strtol(argv[0], NULL, 16);
+    uint32_t high_addr = strtol(argv[1], NULL, 16);
+    if (low_addr > high_addr) {
+        printf(ANSI_COLOR_RED"memory addresses don't fit\n"ANSI_COLOR_RESET);
+        goto error_usage;
+    }
+    low_addr = low_addr & ~0x3;
+    high_addr = high_addr & ~0x3;
+
+    int counter = 0;
+    int dwords_per_line = 8;
+    printf("virtual memory range:[%08x - %08x]\n", low_addr, high_addr);
+
+    for (; low_addr < high_addr; low_addr += 1, counter++) {
+        if ((counter % dwords_per_line) == 0) {
+            printf("0x%08x: ",low_addr + counter * 4);
+        }
+        printf("%08x ", mmu_read32(hartptr, low_addr));
+        if (((counter + 1) % dwords_per_line) == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+    return ACTION_CONTINUE;
+    error_usage:
+        printf(ANSI_COLOR_RED"example: /v 0x1000000 0x2000000\n"ANSI_COLOR_RESET);
+        return ACTION_CONTINUE;
+}
+
+static int
+backtrace_call(struct hart * hartptr, int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf(ANSI_COLOR_RED"usage backtrace [leaf|noleaf] maxframe\n"
+               ANSI_COLOR_RESET);
+        return ACTION_CONTINUE;
+    }
+    int is_leaf_function = !strcmp(argv[0], "leaf");
+    int maxframe = atoi(argv[1]);
+    printf("dump the calling stack:\n");
+    printf("\tis current frame marked as leaf: %s\n", is_leaf_function ?
+                                                       "yes" : "no");
+    printf("\tmaximum frames: %d\n", maxframe);
+
+    uint32_t current_fp = hartptr->registers.s0;
+    uint32_t current_pc = hartptr->pc;
+    int idx = 0;
+    for(idx = 0; idx < maxframe; idx++) {
+        printf("\t#%d %08x\n", idx, current_pc);
+        // Go outer frame.
+        if (!idx && is_leaf_function) {
+            current_pc = hartptr->registers.ra;
+            current_fp = mmu_read32(hartptr, current_fp - 4); 
+        } else {
+            current_pc = mmu_read32(hartptr, current_fp - 4);
+            current_fp = mmu_read32(hartptr, current_fp - 8);
+        }
+    }
+    return ACTION_CONTINUE;
+}
 static int
 debug_help(struct hart * hartptr, int argc, char *argv[]);
 
@@ -139,6 +207,16 @@ static struct cmd_registery_item cmds_items[] = {
         .cmd_prefixs = {"/x", NULL},
         .func = inspect_memory,
         .desc = "dump physical memory segment"
+    },
+    {
+        .cmd_prefixs = {"/v", NULL},
+        .func = inspect_virtual_memory,
+        .desc = "dump virtual memory segment(BE CAUTIOUS TO USE IT !!!)"
+    },
+    {
+        .cmd_prefixs = {"backtrace", NULL},
+        .func = backtrace_call,
+        .desc = "dump the calling stack..."
     },
     {
         .cmd_prefixs = {"help", NULL},

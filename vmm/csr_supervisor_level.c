@@ -259,6 +259,103 @@ static struct csr_registery_entry sscratch_csr_entry = {
         .write = csr_sscratch_write
     }
 };
+
+static void
+csr_sepc_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_trace("hart id:%d pc:%08x, csr:sepc write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+}
+
+static uint32_t
+csr_sepc_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_trace("hart id:%d pc:%08x, csr:sepc read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_sepc_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry sepc_csr_entry = {
+    .csr_addr = CSR_ADDRESS_SEPC,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_sepc_reset,
+        .read = csr_sepc_read,
+        .write = csr_sepc_write
+    }
+};
+
+static void
+csr_stval_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_trace("hart id:%d pc:%08x, csr:stval write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+}
+
+static uint32_t
+csr_stval_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_trace("hart id:%d pc:%08x, csr:stval read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_stval_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry stval_csr_entry = {
+    .csr_addr = CSR_ADDRESS_STVAL,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_stval_reset,
+        .read = csr_stval_read,
+        .write = csr_stval_write
+    }
+};
+
+static void
+csr_scause_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
+{
+    csr->csr_blob = value;
+    log_trace("hart id:%d pc:%08x, csr:scause write 0x:%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+}
+
+static uint32_t
+csr_scause_read(struct hart *hartptr, struct csr_entry *csr)
+{
+    log_trace("hart id:%d pc:%08x, csr:scause read:0x%x\n",
+              hartptr->hart_id, hartptr->pc, csr->csr_blob);
+    return csr->csr_blob;
+}
+
+static void
+csr_scause_reset(struct hart *hartptr, struct csr_entry * csr)
+{
+    csr->csr_blob = 0x0;
+}
+
+static struct csr_registery_entry scause_csr_entry = {
+    .csr_addr = CSR_ADDRESS_SCAUSE,
+    .csr_registery = {
+        .wpri_mask = WPRI_MASK_ALL,
+        .reset = csr_scause_reset,
+        .read = csr_scause_read,
+        .write = csr_scause_write
+    }
+};
+
 __attribute__((constructor)) static void
 csr_supervisor_level_init(void)
 {
@@ -269,5 +366,8 @@ csr_supervisor_level_init(void)
     register_csr_entry(&sstatus_csr_entry);
     register_csr_entry(&stvec_csr_entry);
     register_csr_entry(&sscratch_csr_entry);
+    register_csr_entry(&sepc_csr_entry);
+    register_csr_entry(&stval_csr_entry);
+    register_csr_entry(&scause_csr_entry);
 }
 

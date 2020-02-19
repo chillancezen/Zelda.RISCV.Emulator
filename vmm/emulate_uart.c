@@ -75,6 +75,15 @@ uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
 void
 build_uart_fdt_node(struct fdt_build_blob * blob)
 {
+    // chosen node
+    fdt_begin_node(blob, "chosen");
+    char * bootarg = "console=tty0";
+    fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
+    char stdout_path[64];
+    sprintf(stdout_path, "/uart@%x", UART_16550_BASE);
+    fdt_prop(blob, "stdout-path", strlen(stdout_path) + 1, stdout_path);
+    fdt_end_node(blob);
+
     char node_name[64];
     sprintf(node_name, "uart@%x", UART_16550_BASE);
     fdt_begin_node(blob, node_name);
@@ -88,15 +97,6 @@ build_uart_fdt_node(struct fdt_build_blob * blob)
     uint32_t regs[4] = {BIG_ENDIAN32(0), BIG_ENDIAN32(UART_16550_BASE),
                         BIG_ENDIAN32(0), BIG_ENDIAN32(0x100)};
     fdt_prop(blob, "reg", 16, regs);
-    fdt_end_node(blob);
-
-    // chosen node
-    fdt_begin_node(blob, "chosen");
-    char * bootarg = "";
-    fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
-    char stdout_path[64];
-    sprintf(stdout_path, "/uart@%x", UART_16550_BASE);
-    fdt_prop(blob, "stdout-path", strlen(stdout_path) + 1, stdout_path);
     fdt_end_node(blob);
 }
 

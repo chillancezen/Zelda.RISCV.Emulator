@@ -87,6 +87,44 @@ riscv_mret_translator(struct decoding * dec, struct prefetch_blob * blob,
 }
 
 __attribute__((unused)) static void
+sret_callback(struct hart * hartptr)
+{
+    assert_hart_running_in_smode(hartptr);
+    adjust_mstatus_upon_sret(hartptr);
+    adjust_pc_upon_sret(hartptr);
+    flush_translation_cache(hartptr);
+
+}
+
+static void
+riscv_sret_translator(struct decoding * dec, struct prefetch_blob * blob,
+                      uint32_t instruction)
+{
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    PRECHECK_TRANSLATION_CACHE(sret_instruction, blob);
+    BEGIN_TRANSLATION(sret_instruction);
+    __asm__ volatile("movq %%r12, %%rdi;"
+                     "movq $sret_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
+                     "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
+                     TRAP_TO_VMM(sret_instruction)
+                     :
+                     :
+                     :"memory");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32()
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(sret_instruction);
+        BEGIN_PARAM(sret_instruction)
+            instruction_linear_address
+        END_PARAM()
+    COMMIT_TRANSLATION(sret_instruction, hartptr, instruction_linear_address);
+    blob->is_to_stop = 1;
+}
+
+__attribute__((unused)) static void
 sfence_vma_callback(struct hart * hartptr)
 {
     // flush tlb cache
@@ -178,23 +216,67 @@ riscv_ecall_translator(struct decoding * dec, struct prefetch_blob * blob,
     blob->is_to_stop = 1;
 }
 
+#include <hart_interrupt.h>
+__attribute__((unused)) static void
+wfi_callback(struct hart * hartptr)
+{
+    hartptr->pc += 4;
+    // VMM YIELDS CPU until next interrupt comes
+    //ASSERT(is_interrupt_deliverable(hartptr, INTERRUPT_SUPERVISOR_TIMER));
+    deliver_interrupt(hartptr, INTERRUPT_MACHINE_TIMER);
+    dump_hart(hartptr);
+    __not_reach();
+}
+static void
+riscv_wfi_translator(struct decoding * dec, struct prefetch_blob * blob,
+                     uint32_t instruction)
+{
+    ASSERT(0x8 == (dec->imm >> 5));
+    uint32_t instruction_linear_address = blob->next_instruction_to_fetch;
+    struct hart * hartptr = (struct hart *)blob->opaque;
+    PRECHECK_TRANSLATION_CACHE(wfi_instruction, blob);
+    BEGIN_TRANSLATION(wfi_instruction);
+    __asm__ volatile("movq %%r12, %%rdi;"
+                     "movq $wfi_callback, %%rax;"
+                     SAVE_GUEST_CONTEXT_SWITCH_REGS()
+                     "call *%%rax;"
+                     RESTORE_GUEST_CONTEXT_SWITCH_REGS()
+                     PROCEED_TO_NEXT_INSTRUCTION()
+                     TRAP_TO_VMM(wfi_instruction)
+                     :
+                     :
+                     :"memory");
+        BEGIN_PARAM_SCHEMA()
+            PARAM32()
+        END_PARAM_SCHEMA()
+    END_TRANSLATION(wfi_instruction);
+        BEGIN_PARAM(wfi_instruction)
+            instruction_linear_address
+        END_PARAM()
+    COMMIT_TRANSLATION(wfi_instruction, hartptr, instruction_linear_address);
+    blob->is_to_stop = 1;
+}
 static void
 riscv_funct3_000_translator(struct decoding * dec, struct prefetch_blob * blob,
                             uint32_t instruction)
 {
     if (((dec->imm >> 5) & 0x7f) == 0x9) {
         riscv_sfence_vma_translator(dec, blob, instruction);
+    } else if (dec->rs2_index == 0x5) {
+        riscv_wfi_translator(dec, blob, instruction);
     } else if (dec->rs2_index == 0x1) {
         riscv_ebreak_translator(dec, blob, instruction); 
     } else if (dec->rs2_index == 0x2) {
         if ((dec->imm >> 5) == 0x18) {
             riscv_mret_translator(dec, blob, instruction);
+        } else if ((dec->imm >> 5) == 0x8) {
+            riscv_sret_translator(dec, blob, instruction);
         } else {
             __not_reach();
         }
     } else if (dec->rs2_index == 0x0) {
         riscv_ecall_translator(dec, blob, instruction); 
-    }else {
+    } else {
         log_fatal("can not translate:0x%x at 0x%x\n", instruction, blob->next_instruction_to_fetch);
         __not_reach();
     }

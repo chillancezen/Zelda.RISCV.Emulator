@@ -28,6 +28,16 @@ adjust_pc_upon_mret(struct hart * hartptr)
 }
 
 static inline void
+adjust_pc_upon_sret(struct hart * hartptr)
+{
+    struct csr_entry * csr =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SEPC];
+    uint32_t sepc = csr->csr_blob;
+    hartptr->pc = sepc;
+    log_trace("supervisor mode returns to:0x%x\n", sepc);
+}
+
+static inline void
 adjust_mstatus_upon_mret(struct hart * hartptr)
 {
     uint8_t mpp = hartptr->status.mpp;
@@ -55,9 +65,29 @@ adjust_mstatus_upon_mret(struct hart * hartptr)
 }
 
 static inline void
+adjust_mstatus_upon_sret(struct hart * hartptr)
+{
+    uint8_t spp = hartptr->status.spp;
+    ASSERT(spp == PRIVILEGE_LEVEL_USER ||
+           spp == PRIVILEGE_LEVEL_SUPERVISOR);
+    hartptr->privilege_level = spp;
+    hartptr->status.spp = PRIVILEGE_LEVEL_USER;
+    hartptr->status.sie = hartptr->status.spie;
+    hartptr->status.spie = 1;
+}
+
+static inline void
 assert_hart_running_in_mmode(struct hart * hartptr)
 {
     if (hartptr->privilege_level != PRIVILEGE_LEVEL_MACHINE) {
+        raise_exception(hartptr, EXCEPTION_ILLEEGAL_INSTRUCTION);
+    }
+}
+
+static inline void
+assert_hart_running_in_smode(struct hart * hartptr)
+{
+    if (hartptr->privilege_level != PRIVILEGE_LEVEL_SUPERVISOR) {
         raise_exception(hartptr, EXCEPTION_ILLEEGAL_INSTRUCTION);
     }
 }

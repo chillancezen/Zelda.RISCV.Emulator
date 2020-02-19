@@ -9,13 +9,13 @@ static void
 csr_mscratch_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d csr:mscratch write:0x%x\n",hartptr->hart_id, value);
+    log_trace("hart id:%d csr:mscratch write:0x%x\n",hartptr->hart_id, value);
 }
 
 static uint32_t
 csr_mscratch_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d csr:mscratch read:0x%x\n", hartptr->hart_id,
+    log_trace("hart id:%d csr:mscratch read:0x%x\n", hartptr->hart_id,
               csr->csr_blob);
     return csr->csr_blob;
 }
@@ -34,14 +34,14 @@ static struct csr_registery_entry mscratch_csr_entry = {
 static void
 csr_misa_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
-    log_debug("hart id:%d, csr:misa write ignored\n",
+    log_trace("hart id:%d, csr:misa write ignored\n",
               hartptr->hart_id);
 }
 
 static uint32_t
 csr_misa_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:misa read:0x%x\n",
+    log_trace("hart id:%d, csr:misa read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -77,7 +77,7 @@ csr_mvendorid_reset(struct hart *hartptr, struct csr_entry * csr)
 static uint32_t
 csr_mvendorid_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mvendorid read:0x%x\n",
+    log_trace("hart id:%d, csr:mvendorid read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -95,7 +95,7 @@ static struct csr_registery_entry mvendorid_csr_entry = {
 static uint32_t
 csr_mhartid_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mhartid read:0x%x\n",
+    log_trace("hart id:%d, csr:mhartid read:0x%x\n",
               hartptr->hart_id, hartptr->hart_id);
     return hartptr->hart_id;
 }
@@ -113,14 +113,14 @@ static void
 csr_mtvec_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:mtvec write 0x:%x\n",
+    log_trace("hart id:%d, csr:mtvec write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_mtvec_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mtvec read:0x%x\n",
+    log_trace("hart id:%d, csr:mtvec read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -146,14 +146,14 @@ static void
 csr_mcounteren_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:mcounteren write 0x:%x\n",
+    log_trace("hart id:%d, csr:mcounteren write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_mcounteren_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mcounteren read:0x%x\n",
+    log_trace("hart id:%d, csr:mcounteren read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -179,14 +179,14 @@ static void
 csr_mie_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     hartptr->ienable.dword = value;
-    log_debug("hart id:%d, csr:mie write 0x:%x\n",
+    log_trace("hart id:%d, csr:mie write 0x:%x\n",
               hartptr->hart_id, hartptr->ienable.dword);
 }
 
 static uint32_t
 csr_mie_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mie read:0x%x\n",
+    log_trace("hart id:%d, csr:mie read:0x%x\n",
               hartptr->hart_id, hartptr->ienable.dword);
     return hartptr->ienable.dword;
 }
@@ -219,14 +219,14 @@ csr_mip_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
     // MEIP is cleared by PLIC.
     uint32_t mip_mask = hartptr->ipending.dword & 0x888;
     hartptr->ipending.dword = (value & (~0x888)) | mip_mask;
-    log_debug("hart id:%d, csr:mip write 0x:%x\n",
+    log_trace("hart id:%d, csr:mip write 0x:%x\n",
               hartptr->hart_id, hartptr->ipending.dword);
 }
 
 static uint32_t
 csr_mip_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mip read:0x%x\n",
+    log_trace("hart id:%d, csr:mip read:0x%x\n",
               hartptr->hart_id, hartptr->ipending.dword);
     return hartptr->ipending.dword;
 }
@@ -252,14 +252,14 @@ static void
 csr_medeleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:medeleg write 0x:%x\n",
+    log_trace("hart id:%d, csr:medeleg write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_medeleg_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:medeleg read:0x%x\n",
+    log_trace("hart id:%d, csr:medeleg read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -284,14 +284,14 @@ static void
 csr_mideleg_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     hartptr->idelegation.dword = value;
-    log_debug("hart id:%d, csr:mideleg write 0x:%x\n",
+    log_trace("hart id:%d, csr:mideleg write 0x:%x\n",
               hartptr->hart_id, hartptr->idelegation.dword);
 }
 
 static uint32_t
 csr_mideleg_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mideleg read:0x%x\n",
+    log_trace("hart id:%d, csr:mideleg read:0x%x\n",
               hartptr->hart_id, hartptr->idelegation.dword);
     return hartptr->idelegation.dword;
 }
@@ -326,7 +326,7 @@ csr_mstatus_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
     hartptr->status.mpie = (value >> 7) & 0x1;
     hartptr->status.spp = (value >> 8) & 0x1;
     hartptr->status.mpp = (value >> 11) & 0x3;
-    log_debug("hart id:%d, csr:mstatus write 0x:%x\n",
+    log_trace("hart id:%d, csr:mstatus write 0x:%x\n",
               hartptr->hart_id, value);
 }
 
@@ -342,7 +342,7 @@ csr_mstatus_read(struct hart *hartptr, struct csr_entry *csr)
     dword |= ((uint32_t)hartptr->status.mpie) << 7;
     dword |= ((uint32_t)hartptr->status.spp) << 8;
     dword |= ((uint32_t)hartptr->status.mpp) << 11;
-    log_debug("hart id:%d, csr:mstatus read:0x%x\n",
+    log_trace("hart id:%d, csr:mstatus read:0x%x\n",
               hartptr->hart_id, dword);
     return dword;
 }
@@ -370,14 +370,14 @@ static void
 csr_mepc_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:mepc write 0x:%x\n",
+    log_trace("hart id:%d, csr:mepc write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_mepc_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mepc read:0x%x\n",
+    log_trace("hart id:%d, csr:mepc read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -403,14 +403,14 @@ static void
 csr_mcause_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:mcause write 0x:%x\n",
+    log_trace("hart id:%d, csr:mcause write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_mcause_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mcause read:0x%x\n",
+    log_trace("hart id:%d, csr:mcause read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }
@@ -435,14 +435,14 @@ static void
 csr_mtval_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_debug("hart id:%d, csr:mtval write 0x:%x\n",
+    log_trace("hart id:%d, csr:mtval write 0x:%x\n",
               hartptr->hart_id, csr->csr_blob);
 }
 
 static uint32_t
 csr_mtval_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:mtval read:0x%x\n",
+    log_trace("hart id:%d, csr:mtval read:0x%x\n",
               hartptr->hart_id, csr->csr_blob);
     return csr->csr_blob;
 }

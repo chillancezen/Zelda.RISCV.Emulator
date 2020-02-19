@@ -25,7 +25,7 @@ static uint32_t
 csr_time_read(struct hart *hartptr, struct csr_entry *csr)
 {
     hartptr->tsc = get_host_tsc();
-    log_debug("hart id:%d, csr:time read:0x%x\n",
+    log_trace("hart id:%d, csr:time read:0x%x\n",
               hartptr->hart_id, (uint32_t)hartptr->tsc);
     return (uint32_t)hartptr->tsc;
 }
@@ -47,7 +47,7 @@ csr_timeh_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 static uint32_t
 csr_timeh_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_debug("hart id:%d, csr:timeh read:0x%x\n",
+    log_trace("hart id:%d, csr:timeh read:0x%x\n",
               hartptr->hart_id, (uint32_t)(hartptr->tsc >> 32));
     return (uint32_t)(hartptr->tsc >> 32);
 }

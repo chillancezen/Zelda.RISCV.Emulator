@@ -24,7 +24,7 @@ adjust_pc_upon_mret(struct hart * hartptr)
 {
     uint32_t mepc = get_hart_mepc(hartptr);
     hartptr->pc = mepc;
-    log_trace("machine mode returns to:0x%x\n", mepc);
+    log_debug("machine mode returns to:0x%x\n", mepc);
 }
 
 static inline void
@@ -34,7 +34,7 @@ adjust_pc_upon_sret(struct hart * hartptr)
         &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SEPC];
     uint32_t sepc = csr->csr_blob;
     hartptr->pc = sepc;
-    log_trace("supervisor mode returns to:0x%x\n", sepc);
+    log_debug("supervisor mode returns to:0x%x\n", sepc);
 }
 
 static inline void

@@ -185,7 +185,6 @@ riscv_mulhsu_translator(struct decoding * dec,
 }
 
 
-// FIXME: division by zero exception must be checked.
 // FIXME: the overfolow case for risc-v div and rem(divu and remu is all right):
 // li a0, -1 << 31
 // li a1, -1
@@ -213,20 +212,18 @@ riscv_div_translator(struct decoding * dec,
                      "addq %%r15, %%rsi;"
                      "movl (%%rsi), %%ebx;"// RS2 XXX: divisor must be non-zero.
                      "movl %%ebx, %%r8d;"
-                     "cmp $0x0, %%r8d;"
-                     "jz 1f;"
-                     "idiv %%ebx;" // eax<= quotient, edx<= remainder
-                     "movl "PIC_PARAM(2)", %%edi;"
+                     "cmpl $0x0, %%r8d;"
+                     "jnz 1f;"
+                     "movl $0xffffffff, %%eax;"
+                     "jmp 2f;"
+                     "1:idiv %%ebx;" // eax<= quotient, edx<= remainder
+                     "2:movl "PIC_PARAM(2)", %%edi;"
                      "shl $0x2, %%edi;"
                      "addq %%r15, %%rdi;"
                      "movl %%eax, (%%rdi);"
                      RESET_ZERO_REGISTER()
                      PROCEED_TO_NEXT_INSTRUCTION()
                      END_INSTRUCTION(div_instruction)
-                     "1: movq %%r12, %%rdi;"
-                     "movl $0x2, %%esi;"
-                     "movq $raise_exception, %%rax;"
-                     "jmpq *%%rax;" 
                      :
                      :
                      :"memory");

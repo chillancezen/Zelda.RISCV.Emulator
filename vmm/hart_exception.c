@@ -33,7 +33,7 @@ exception_target_privilege_level(struct hart * hartptr, uint8_t exception_number
 static uint8_t trap_value_map[16];
 
 void
-raise_exception(struct hart * hartptr, uint8_t exception_cause)
+raise_exception_internal(struct hart * hartptr, uint8_t exception_cause)
 {
     uint8_t target_pl =
         exception_target_privilege_level(hartptr, exception_cause);

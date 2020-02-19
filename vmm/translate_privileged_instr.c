@@ -220,11 +220,11 @@ riscv_ecall_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 wfi_callback(struct hart * hartptr)
 {
-    hartptr->pc += 4;
+    //hartptr->pc += 4;
     // VMM YIELDS CPU until next interrupt comes
     //ASSERT(is_interrupt_deliverable(hartptr, INTERRUPT_SUPERVISOR_TIMER));
-    deliver_interrupt(hartptr, INTERRUPT_MACHINE_TIMER);
-    dump_hart(hartptr);
+    //deliver_interrupt(hartptr, INTERRUPT_MACHINE_TIMER);
+    //dump_hart(hartptr);
     __not_reach();
 }
 static void

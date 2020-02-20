@@ -305,8 +305,13 @@ riscv_divu_translator(struct decoding * dec,
                      "shl $0x2, %%esi;"
                      "addq %%r15, %%rsi;"
                      "movl (%%rsi), %%ebx;"// RS2 XXX: divisor must be non-zero.
-                     "div %%ebx;" // eax<= quotient, edx<= remainder
-                     "movl "PIC_PARAM(2)", %%edi;"
+                     "movl %%ebx, %%r8d;"
+                     "cmpl $0x0, %%r8d;"
+                     "jnz 1f;"
+                     "movl $0xffffffff, %%eax;"
+                     "jmp 2f;"
+                     "1:div %%ebx;" // eax<= quotient, edx<= remainder
+                     "2:movl "PIC_PARAM(2)", %%edi;"
                      "shl $0x2, %%edi;"
                      "addq %%r15, %%rdi;"
                      "movl %%eax, (%%rdi);"

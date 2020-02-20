@@ -21,7 +21,8 @@
 #define UART_REG_STATUS_RX 0x01
 #define UART_REG_STATUS_TX 0x20
 
-
+#define UART_LSR_TEMT       0x40
+#define UART_LSR_THRE       0x20
 #define UART_BUFFER_SIZE 1024
 
 static uint8_t uart_buffer[UART_BUFFER_SIZE + 1];
@@ -38,10 +39,10 @@ uart_mmio_read(uint64_t addr, int access_size,
     {
         case UART_REG_LSR:
             // always ready to transmit
-            ret = UART_REG_STATUS_TX;
+            ret = UART_LSR_TEMT | UART_LSR_THRE;
             break;
         default:
-            __not_reach();    
+            //__not_reach();    
             break;
     }
     return ret;
@@ -77,7 +78,7 @@ build_uart_fdt_node(struct fdt_build_blob * blob)
 {
     // chosen node
     fdt_begin_node(blob, "chosen");
-    char * bootarg = "console=tty0";
+    char * bootarg = "console=uart8250,mmio,0x10000000";
     fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
     char stdout_path[64];
     sprintf(stdout_path, "/uart@%x", UART_16550_BASE);

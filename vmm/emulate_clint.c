@@ -11,6 +11,7 @@ clint_read(uint64_t addr, int access_size, struct hart * hartptr,
              struct pm_region_operation * pmr)
 {
 
+    __not_reach();
     return 0;
 }
 
@@ -21,7 +22,7 @@ clint_write(uint64_t addr, int access_size, uint64_t value,
                         struct hart * hartptr,
                         struct pm_region_operation * pmr)
 {
-
+    //__not_reach();
 }
 
 

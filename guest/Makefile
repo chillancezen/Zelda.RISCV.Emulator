@@ -14,7 +14,7 @@ GUEST_ELF = guest.rv32.elf
 GUEST_IMG = guest.rv32.img
 GUEST_MAP = guest.rv32.map
 
-CROSS_COMPILE = riscv32-unknown-elf-
+CROSS_COMPILE = riscv32-unknown-linux-gnu-
 %.o: %.S
 	@echo "[AS] $<"
 	@$(CROSS_COMPILE)gcc $(CCPARAMS) -I. -o $@ -c $<

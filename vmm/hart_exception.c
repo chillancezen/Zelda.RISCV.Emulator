@@ -38,8 +38,8 @@ raise_exception_internal(struct hart * hartptr, uint8_t exception_cause)
     uint8_t target_pl =
         exception_target_privilege_level(hartptr, exception_cause);
     ASSERT(exception_cause < 16); 
-    raise_trap_raw(hartptr, target_pl, exception_cause,
-                   trap_value_map[exception_cause] ? hartptr->pc : 0);
+    raise_trap_raw(hartptr, target_pl, exception_cause,hartptr->pc);
+                   //trap_value_map[exception_cause] ? hartptr->pc : 0);
 
 }
 

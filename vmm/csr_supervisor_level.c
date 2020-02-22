@@ -264,14 +264,14 @@ static void
 csr_sepc_write(struct hart *hartptr, struct csr_entry * csr, uint32_t value)
 {
     csr->csr_blob = value;
-    log_trace("hart id:%d pc:%08x, csr:sepc write 0x:%x\n",
+    log_debug("hart id:%d pc:%08x, csr:sepc write 0x:%x\n",
               hartptr->hart_id, hartptr->pc, csr->csr_blob);
 }
 
 static uint32_t
 csr_sepc_read(struct hart *hartptr, struct csr_entry *csr)
 {
-    log_trace("hart id:%d pc:%08x, csr:sepc read:0x%x\n",
+    log_debug("hart id:%d pc:%08x, csr:sepc read:0x%x\n",
               hartptr->hart_id, hartptr->pc, csr->csr_blob);
     return csr->csr_blob;
 }

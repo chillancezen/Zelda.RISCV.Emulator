@@ -111,9 +111,8 @@ void
 raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
                uint32_t cause, uint32_t tval)
 {
-    log_debug("trap to privilege:%d cause:0x%08x, tval:0x%08x pc:%08x(current:%d)\n",
-              target_privilege_level, cause, tval, hartptr->pc,
-              hartptr->privilege_level);
+    uint32_t previous_pc = hartptr->pc;
+    uint8_t previous_pl = hartptr->privilege_level;
     if (target_privilege_level == PRIVILEGE_LEVEL_MACHINE) {
         setup_mmode_trap(hartptr, cause, tval);
     } else {
@@ -121,7 +120,10 @@ raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
         ASSERT(target_privilege_level == PRIVILEGE_LEVEL_SUPERVISOR);
         setup_smode_trap(hartptr, cause, tval);;
     }
-
+    log_debug("trap to privilege:%d cause:0x%08x, tval:0x%08x previous:{pc:%x pl:%d} current:{pc:%x pl:%d}\n",
+              target_privilege_level, cause, tval,
+              previous_pc, previous_pl,
+              hartptr->pc, hartptr->privilege_level);
     // XXX: when trap is taken, the addressing manner may chnage, so
     // the translation cache must be flushed.
     flush_translation_cache(hartptr);

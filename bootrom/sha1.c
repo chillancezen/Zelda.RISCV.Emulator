@@ -16,7 +16,7 @@ A million repetitions of "a"
 /* #define SHA1HANDSOFF * Copies data before messing with it. */
 
 #define SHA1HANDSOFF
-
+#include <stdint.h>
 #include <stdio.h>
 //#include <string.h>
 static inline void

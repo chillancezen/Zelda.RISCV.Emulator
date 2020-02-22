@@ -308,6 +308,48 @@ build_soc_fdt_node(struct fdt_build_blob * blob)
     fdt_end_node(blob);
 }
 
+#include <fcntl.h>
+#include <unistd.h>
+static int
+initramdisk_size(const char * initrd_path)
+{
+    int fd = open(initrd_path, O_RDONLY);
+    if (fd < 0) {
+        return 0;
+    }
+    int image_length = lseek(fd, 0, SEEK_END);
+    close(fd);
+    return image_length;
+}
+
+static void
+build_chosen_fdt_node(struct fdt_build_blob * blob)
+{
+    struct virtual_machine * vm =
+        CONTAINER_OF(blob, struct virtual_machine, fdt);
+    char * bootarg = (char *)ini_get(vm->ini_config, "image", "bootarg");
+    ASSERT(bootarg);
+    fdt_begin_node(blob, "chosen");
+    {
+        const char * initrd_path = ini_get(vm->ini_config, "image", "initrd");
+        const char * initrd_load_base_string =
+            ini_get(vm->ini_config, "image", "initrd_load_base");
+        if (initrd_path && initrd_load_base_string) {
+            uint32_t initrd_start = strtol(initrd_load_base_string, NULL, 16);
+            uint32_t initrd_end = initrd_start + initramdisk_size(initrd_path);
+            initrd_start = BIG_ENDIAN32(initrd_start);
+            initrd_end = BIG_ENDIAN32(initrd_end);
+            fdt_prop(blob, "linux,initrd-end", 4, &initrd_end);
+            fdt_prop(blob, "linux,initrd-start", 4, &initrd_start);
+        }
+    }
+    fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
+    char stdout_path[64];
+    sprintf(stdout_path, "/uart@%x", 0x10000000);
+    fdt_prop(blob, "stdout-path", strlen(stdout_path) + 1, stdout_path);
+    fdt_end_node(blob);
+}
+
 void
 fdt_init(struct fdt_build_blob * blob)
 {
@@ -321,6 +363,7 @@ fdt_init(struct fdt_build_blob * blob)
     fdt_prop(blob, "model", strlen("riscv-virtio,qemu") + 1, "riscv-virtio,qemu");
 
     build_bootrom_fdt_node(blob);
+    build_chosen_fdt_node(blob);
     build_uart_fdt_node(blob);
     build_memory_fdt_node(blob);
     build_cpu_fdt_node(blob);

@@ -52,6 +52,9 @@ static void
 uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
                 struct hart * hartptr, struct pm_region_operation * pmr)
 {
+    if (access_size != 1) {
+        return;
+    }
     ASSERT(access_size == 1);
     switch (addr - UART_16550_BASE)
     {
@@ -76,15 +79,6 @@ uart_mmio_write(uint64_t addr, int access_size, uint64_t value,
 void
 build_uart_fdt_node(struct fdt_build_blob * blob)
 {
-    // chosen node
-    fdt_begin_node(blob, "chosen");
-    char * bootarg = "console=uart8250,mmio,0x10000000";
-    fdt_prop(blob, "bootargs", strlen(bootarg) + 1, bootarg);
-    char stdout_path[64];
-    sprintf(stdout_path, "/uart@%x", UART_16550_BASE);
-    fdt_prop(blob, "stdout-path", strlen(stdout_path) + 1, stdout_path);
-    fdt_end_node(blob);
-
     char node_name[64];
     sprintf(node_name, "uart@%x", UART_16550_BASE);
     fdt_begin_node(blob, node_name);

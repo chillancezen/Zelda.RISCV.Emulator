@@ -171,8 +171,8 @@ prefetch_one_instruction(struct prefetch_blob * blob)
     instruction_translator per_category_translator = translators[opcode];
     // NOTE: if ASSERTion takes true, it indicates the instruction is not recognized
     if (!per_category_translator) {
-        printf("No translator found for instruction at:0x%x\n",
-               blob->next_instruction_to_fetch);
+        printf("No translator found for instruction:%08x at:0x%x\n",
+               instruction, blob->next_instruction_to_fetch);
         dump_hart(hartptr);
         __not_reach();
     }

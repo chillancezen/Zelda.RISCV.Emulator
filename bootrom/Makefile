@@ -14,7 +14,7 @@ ROM_ELF = bootrom.rv32.elf
 ROM_IMG = bootrom.rv32.img
 ROM_MAP = bootrom.rv32.map
 
-CROSS_COMPILE = riscv32-unknown-elf-
+CROSS_COMPILE = riscv32-unknown-linux-gnu-
 %.o: %.S
 	@echo "[AS] $<"
 	@$(CROSS_COMPILE)gcc $(CCPARAMS) -I. -o $@ -c $<

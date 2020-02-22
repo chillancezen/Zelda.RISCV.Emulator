@@ -91,11 +91,23 @@ ram_init(struct virtual_machine * vm)
     // load the image(maybe a Linux kernel) into ram here
     // FIXME: we need a more sophisticated way to load image later. rigt now we
     // just load a binary image.
-    const char * image_path = ini_get(vm->ini_config, "image", "path");
-    const char * load_base_string = ini_get(vm->ini_config, "image", "load_base");
+    const char * image_path = ini_get(vm->ini_config, "image", "kernel");
+    const char * load_base_string = ini_get(vm->ini_config, "image", "kernel_load_base");
     ASSERT(image_path);
     ASSERT(load_base_string);
     uint32_t load_base = strtol(load_base_string, NULL, 16);
     ASSERT(!preload_binary_image(vm->main_mem_host_base + load_base - vm->main_mem_base,
                                  vm->main_mem_size, image_path));
+
+    // Load the init ramdisk
+    const char * initrd_path = ini_get(vm->ini_config, "image", "initrd");
+    const char * initrd_load_base_string =
+        ini_get(vm->ini_config, "image", "initrd_load_base");
+    if (initrd_path && initrd_load_base_string) {
+        uint32_t initrd_load_base = strtol(initrd_load_base_string, NULL, 16);
+        ASSERT(!preload_binary_image(vm->main_mem_host_base + initrd_load_base -
+                                     vm->main_mem_base,
+                                     vm->main_mem_size - initrd_load_base +
+                                     vm->main_mem_base, initrd_path));
+    }
 }

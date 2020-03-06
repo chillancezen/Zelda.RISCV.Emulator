@@ -29,7 +29,8 @@ uint32_t
 mmu_read32_aligned(struct hart * hartptr, uint32_t location)
 {
     if (location & 0x3) {
-        raise_exception(hartptr, EXCEPTION_LOAD_ADDRESS_MISALIGN);
+        raise_exception_with_tvalue(hartptr, EXCEPTION_LOAD_ADDRESS_MISALIGN,
+                                    location);
     }
     return vmread32(hartptr, location);
 }
@@ -60,7 +61,8 @@ void
 mmu_write32_aligned(struct hart * hartptr, uint32_t location, uint32_t value)
 {
     if (location & 0x3) {
-        raise_exception(hartptr, EXCEPTION_LOAD_ADDRESS_MISALIGN);
+        raise_exception_with_tvalue(hartptr, EXCEPTION_LOAD_ADDRESS_MISALIGN,
+                                    location);
     }
     vmwrite32(hartptr, location, value);
 }
@@ -91,7 +93,9 @@ mmu_instruction_read32(struct hart * hartptr, uint32_t instruction_va)
                                     instruction_va);
         }
         if (!entry) {
-            raise_exception(hartptr, EXCEPTION_INSTRUCTION_PAGE_FAULT);
+            raise_exception_with_tvalue(hartptr,
+                                        EXCEPTION_INSTRUCTION_PAGE_FAULT,
+                                        instruction_va);
             __not_reach();
         }
         return entry->pmr->pmr_read(entry->pa_tag | ((instruction_va & ~(entry->page_mask))),

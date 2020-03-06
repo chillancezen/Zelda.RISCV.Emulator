@@ -78,7 +78,8 @@ vmread##_size (struct hart * hartptr, uint32_t linear_address)                 \
                                     linear_address);                           \
         }                                                                      \
         if (!entry) {                                                          \
-            raise_exception(hartptr, EXCEPTION_LOAD_PAGE_FAULT);               \
+            raise_exception_with_tvalue(hartptr, EXCEPTION_LOAD_PAGE_FAULT,    \
+                                        linear_address);                       \
             __not_reach();                                                     \
         }                                                                      \
         return entry->pmr->pmr_read(entry->pa_tag | ((linear_address & ~(entry->page_mask))),\
@@ -116,7 +117,8 @@ vmwrite##_size (struct hart * hartptr, uint32_t linear_address,                \
                                     linear_address);                           \
         }                                                                      \
         if (!entry) {                                                          \
-            raise_exception(hartptr, EXCEPTION_STORE_PAGE_FAULT);              \
+            raise_exception_with_tvalue(hartptr, EXCEPTION_STORE_PAGE_FAULT,   \
+                                        linear_address);                       \
             __not_reach();                                                     \
         }                                                                      \
         return entry->pmr->pmr_write(entry->pa_tag | ((linear_address & ~(entry->page_mask))),\

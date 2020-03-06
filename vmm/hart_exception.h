@@ -25,9 +25,16 @@
 #define EXCEPTION_STORE_PAGE_FAULT              0xf
 
 void
-raise_exception_internal(struct hart * hartptr, uint8_t exception_cause);
+raise_exception_internal(struct hart * hartptr, uint8_t exception_cause,
+                         uint32_t trap_value);
 
 #define raise_exception(hart, cause) {                                         \
-    raise_exception_internal(hart, cause);                                     \
+    raise_exception_internal(hart, cause, 0);                                  \
 }
+
+
+#define raise_exception_with_tvalue(hart, cause, tval) {                       \
+    raise_exception_internal(hart, cause, tval);                               \
+}
+
 #endif

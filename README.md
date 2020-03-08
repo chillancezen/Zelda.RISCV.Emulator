@@ -9,7 +9,7 @@ there are lots of things to build in order to run a riscv Linux. here is the gui
 - SBI software: Berkely Bootloader(aka. BBL) is my choice.
 - initramfs cpio built with busybox.
 - build the emulator by simplily running `make`
-## how to run ?
+## How to run ?
 Now you should be able to find an executable:`vmx` under directory vmm. that's the virtual machine monitor.
 in order to run a guest, we have to define a configuration file to instruct vmm how to load and run a guest. 
 
@@ -184,8 +184,121 @@ $./vmm/vmx ./test.vm.ini
 [UART16550] [ 6958.882195] [<c0031dd0>] ret_from_exception+0x0/0x10
 [UART16550] [ 6959.950079] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0) ]---
 ```
+## How to debug?
+The vmm provides a builtin debugger to assist troubleshooting. which is pretty enough for me to find what's going on with my guest. of course you also need the binutils. 
 
-## what's the device tree organized?
+any `ebreak` instruction will cause the vmm entering debug shell and you can also specify the breakpoints(virtual/physical address) in the vm config file.
+
+once a breakpoint is hit in any case, vmm will suspend execution of vmm and prompt an interactive shell:
+```
+(zelda.risc-v.dbg: 0xc011de8c) help
+supported commands:
+	info registers  dump the registers of a hart
+	info translation  dump the items in translation cache
+	info breakpoints  dump all the breakpoints
+	continue  continue to execute util it reaches next breakpoint
+	break  add a break by following the address of the target address
+	/x  dump physical memory segment
+	/v  dump virtual memory segment(BE CAUTIOUS TO USE IT !!!)
+	backtrace  dump the calling stack...
+	help  display all the supported commands
+```
+### Dump registers information
+This dumps all the 32 registers and PC and several important CSRs.
+```
+(zelda.risc-v.dbg: 0xc011de8c) info registers
+[breakpoint at 0xc011de8c]:
+dump hart:0x1919080
+	hart-id: 0
+	pc: 0xc011de8c
+	X00(zero): 0x00000000  	X01(ra  ): 0xc011ea14  	X02(sp  ): 0xfec65bc0  	X03(gp  ): 0xc05ea7b8
+	X04(tp  ): 0xfec60000  	X05(t0  ): 0xfed24bd0  	X06(t1  ): 0x00000000  	X07(t2  ): 0x00000ff0
+	X08(s0  ): 0xfec65c90  	X09(s1  ): 0x00000000  	X10(a0  ): 0xfed24bd0  	X11(a1  ): 0x00000000
+	X12(a2  ): 0xfec65cb8  	X13(a3  ): 0x00000004  	X14(a4  ): 0x00100cca  	X15(a5  ): 0x00000000
+	X16(a6  ): 0xfec65cb8  	X17(a7  ): 0x00000001  	X18(s2  ): 0x00000000  	X19(s3  ): 0xfec65d90
+	X20(s4  ): 0x00000000  	X21(s5  ): 0xfed24cc0  	X22(s6  ): 0xfec199c0  	X23(s7  ): 0x00001000
+	X24(s8  ): 0x00001000  	X25(s9  ): 0x00000000  	X26(s10 ): 0xc04eec40  	X27(s11 ): 0xc0561000
+	X28(t3  ): 0x00000000  	X29(t4  ): 0x00000000  	X30(t5  ): 0x00000000  	X31(t6  ): 0xfec02e1c
+	hart control and status:
+	privilege level:1
+	status: uie:0 sie:1 mie:0 upie:0 spie:0 mpie:1 spp:1, mpp:0
+	interrupt pending: 0x00000000
+	interrupt enable: 0x000002aa
+	interrupt delegation: 0x00000222
+	machine exception delegation: 0x0000b109
+```
+### Dump translation cache
+To see what's inside the translation cache:
+```
+(zelda.risc-v.dbg: 0xc011de8c) info translation
+hart:0 has 45 items in translation cache:
+	0xc01043c0: 0x7ff6a0a65000 	0xc01043c4: 0x7ff6a0a65062 	0xc011de50: 0x7ff6a0a6587d 	0xc011de54: 0x7ff6a0a658df
+	0xc011de58: 0x7ff6a0a65955 	0xc011de5c: 0x7ff6a0a659cb 	0xc011de60: 0x7ff6a0a65a41 	0xc011de64: 0x7ff6a0a65ab7
+	0xc011de68: 0x7ff6a0a65b2d 	0xc011de6c: 0x7ff6a0a65ba3 	0xc011de70: 0x7ff6a0a65c19 	0xc011de74: 0x7ff6a0a65c8f
+	0xc011de78: 0x7ff6a0a65d05 	0xc011de7c: 0x7ff6a0a65d7b 	0xc011de80: 0x7ff6a0a65df1 	0xc011de84: 0x7ff6a0a65e67
+	0xc011de88: 0x7ff6a0a65edd 	0xc011de8c: 0x7ff6a0a65f3f 	0xc011de90: 0x7ff6a0a65fa1 	0xc011de94: 0x7ff6a0a66003
+	0xc011de98: 0x7ff6a0a66065 	0xc011de9c: 0x7ff6a0a660db 	0xc011dea0: 0x7ff6a0a6613d 	0xc011dea4: 0x7ff6a0a661bb
+	0xc011dea8: 0x7ff6a0a6621d 	0xc011deac: 0x7ff6a0a6627f 	0xc011deb0: 0x7ff6a0a662e1 	0xc011e9cc: 0x7ff6a0a650e2
+	0xc011e9d0: 0x7ff6a0a65160 	0xc011e9d4: 0x7ff6a0a651c5 	0xc011e9d8: 0x7ff6a0a6522c 	0xc011e9dc: 0x7ff6a0a652aa
+	0xc011e9e0: 0x7ff6a0a6530c 	0xc011e9e4: 0x7ff6a0a65374 	0xc011e9e8: 0x7ff6a0a653d6 	0xc011e9ec: 0x7ff6a0a65438
+	0xc011e9f0: 0x7ff6a0a654a8 	0xc011e9f4: 0x7ff6a0a6550a 	0xc011e9f8: 0x7ff6a0a65580 	0xc011e9fc: 0x7ff6a0a655f6
+	0xc011ea00: 0x7ff6a0a65658 	0xc011ea04: 0x7ff6a0a656d6 	0xc011ea08: 0x7ff6a0a65738 	0xc011ea0c: 0x7ff6a0a6579a
+	0xc011ea10: 0x7ff6a0a65818
+```
+### Manipulate breakpoints
+the vmm allows you to dynamically add a breakpoint and dump all the breakpoints.
+```
+(zelda.risc-v.dbg: 0xc011de8c) break 0xc011de90
+adding breakpoint: 0xc011de90 succeeds
+(zelda.risc-v.dbg: 0xc011de8c) info breakpoints
+There are 2 breakpoints:
+0xc011de8c    0xc011de90
+```
+
+### Dump physical memory
+dump the physical memory segment with given addresses range.
+
+**Caveats: this may produce side effect if you are dumping the mmio memory range**
+```
+(zelda.risc-v.dbg: 0xc011de8c) /x 0x80000000, 0x80000100
+host memory range:[0x7ff65f198000 - 0x7ff65f198000]
+0x80000000: 1f80006f 34011173 1a010863 02a12423 02b12623 342025f3 0805d263 00159593
+0x80000020: 00e00513 02b51263 08000513 30453073 02000513 34452073 02812503 02c12583
+0x80000040: 34011173 30200073 00600513 18b51263 08012503 00052023 0ff0000f 08410513
+0x80000060: 0805252f 00157593 00058463 34416073 00257593 00058463 0000100f 00457593
+0x80000080: 00058463 12000073 00857593 00058663 10500073 ff5ff06f fa1ff06f 00112223
+0x800000a0: 00312623 00412823 00512a23 0000c297 00612c23 00259313 00712e23 00628333
+0x800000c0: 02812023 f5432303 02912223 00010513 02c12823 34102673 02d12a23 340012f3
+0x800000e0: 02e12c23 02f12e23 05012023 05112223 05212423 05312623 05412823 05512a23
+```
+
+### Dump virtual memory
+dump the virtual memory segment with given virtual addresses range.
+
+**Caveats: this involves the address translation in MMU, this is really dangerous:if the TLB miss, page walker will be started, if paging is missing, an exception will be raised to guest. and also side effect will be encountered if the backing is MMIO, so be cautious to use it**
+```
+(zelda.risc-v.dbg: 0xc011de8c) /v 0xc011de8c 0xc011deb4
+virtual memory range:[c011de8c - c011deb4]
+0xc011de8c: 00050c93 9300050c 84930005 06849300 00068493 13000684 85130006 e6851300
+0xc011deb4: 
+```
+
+### Dump calling stack
+
+**Caveats: in a leaf function, the `ra` of previous frame is not kept in stack. it's mandatory whether current frame is leaf function, MMU side effect is also taken**
+```
+(zelda.risc-v.dbg: 0xc011de8c) backtrace noleaf 6
+dump the calling stack:
+	is current frame marked as leaf: no
+	maximum frames: 6
+	#0 c011de8c
+	#1 c011ea14
+	#2 c01043c8
+	#3 c0108a10
+	#4 c0108bd8
+	#5 c0163ec8
+```
+## How is the device tree organized?
 
 the device tree is generated by VMM, finally, its passed to bootrom and then BBL&Linux kernel.
 if you specify the option to dump the device tree. you are allowed to inspect what exactly it is by runing:
@@ -275,6 +388,7 @@ if you specify the option to dump the device tree. you are allowed to inspect wh
     };
 };
 ```
+
 ## CORE FEATURE
 - [X] RV32IAM 
 - [X] SV32 SoftMMU

@@ -1,5 +1,45 @@
 # Zelda.RISCV.Emulator
-The system level emulator which utilizes dynamic binary translation for RISCV ISA
+## What's this?
+It's a system level emulator which utilizes dynamic binary translation to translate RISCV32 instructions and emulate RISCV32 ISA.
+the following diagram shows how the emulator is organized. 
+```
+        +------------------------------------+
+        |---------------------------------------+
+        || hart 0                               |
+        ||       +------------+--------------+  |       (raising load/store exception)
+        ||       | Exception  | Interrupt    |  | <-----------------------------------+
+  +----------->  +------------+--------------+  |                                     |
+d |     ||       |        TRAP handling      |  |                                     |
+e |     ||       +---------------------------+  |                                     |
+l |     ||                                      |         +----------------------------------------------+
+i |     ||                                      |         |   Memory Management Unit  |                  |
+v |     ||    +------+---------------+          |         |                           +    +-----------+ |
+e |     ||    | CSRs | Registers| PC |          |         |    +---------+                 |           | |
+r |     ||    +------+---------------+          |  +----> |    |  iTLB   | +-------------+ | main mem  | |
+  |     ||                                      |  |      |    +---------+      +--------+ |           | |
+e |     ||   +--------------------------------+ |  |      |                     |          +-----------+ |
+x |     ||   | dynamic binary translation     | |  |      |                     |                        |
+t |     ||   | +------------------------------+ |  |      |    +---------+      |          +-----------+ |
+e |     ||   | |   translation cache          | |  | +--> |    |  dTLB   | +----+--------+ |           | |
+r |     ||   | +------------------------------+ |  | |    |    +---------+   Page Walker   |  io mem   | |
+n |     ||   | |   x86_64 translation         | |  | |    |                                |           | |
+a |     ||   +-+---+--------+-----------------+ |  | |    |                                +-----------+ |
+l |     ++         |        |                   |  | |    |                                              |
+  |      +--------------------------------------+  | |    +----------------------------------------------+
+i |                |        |                      | |
+n |                |        +----------------------+ |
+t |                |         (mmu instruction load)  |
+e |                |                                 |
+r |                +---------------------------------+
+r |                       (mmu data load/store)
+u |
+p |
+t |    +-----------------------------------------+
+  +----+  Platform-level Interrupt Controller    |
+       |                                         |
+       +-----------------------------------------+
+
+```
 ## How to build?
 Host env: a x86_64 Linux host + gcc 4.8.x
 

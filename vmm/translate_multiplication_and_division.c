@@ -408,5 +408,5 @@ mul_and_div_constructor(void)
 __attribute__((constructor)) static void
 vmm_floating_exception_trap_init(void)
 {
-    feclearexcept(FE_ALL_EXCEPT);
+    //feclearexcept(FE_ALL_EXCEPT);
 }

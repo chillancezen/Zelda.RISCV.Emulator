@@ -15,16 +15,16 @@ GUEST_MAP = vmx.map
 
 %.o: %.S
 	@echo "[AS] $<"
-	@gcc $(CCPARAMS) -I. -o $@ -c $<
+	@$(CC) $(CCPARAMS) -I. -o $@ -c $<
 
 %.o: %.c
 	@echo "[CC] $<"
-	@gcc $(CCPARAMS) -I. -o $@ -c $<
+	@$(CC) $(CCPARAMS) -I. -o $@ -c $<
 
 
 $(GUEST_ELF):$(AS_OBJS) $(C_OBJS)
 	@echo "[LD] $@"
-	@gcc $(LDPARAMS) -Wl,-Map=$(GUEST_MAP) -lm -o $(GUEST_ELF) $(AS_OBJS) $(C_OBJS)
+	@$(CC) $(LDPARAMS) -Wl,-Map=$(GUEST_MAP) -lm -o $(GUEST_ELF) $(AS_OBJS) $(C_OBJS)
 
 clean:
 	@echo "[Cleaning] $(GUEST_ELF)"

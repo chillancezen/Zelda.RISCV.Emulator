@@ -48,7 +48,7 @@ there are lots of things to build in order to run a riscv Linux. here is the gui
 - riscv-Linux, make sure a newer Linux kernel source is built from, Linux 5.4.0 is chosen in my testbed.
 - SBI software: Berkely Bootloader(aka. BBL) is my choice.
 - initramfs cpio built with busybox.
-- build the emulator by simplily running `make`
+- build the emulator by simplily running `CC=gcc-4.8 make`
 ## How to run ?
 Now you should be able to find an executable:`vmx` under directory vmm. that's the virtual machine monitor.
 in order to run a guest, we have to define a configuration file to instruct vmm how to load and run a guest. 

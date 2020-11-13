@@ -40,6 +40,14 @@ t |    +-----------------------------------------+
        +-----------------------------------------+
 
 ```
+
+## Try it out
+I built a binary executable plus bootloader and Linux image. 
+you can download(https://github.com/chillancezen/Zelda.RISCV.Emulator/releases) and decompress it, then run by:
+```
+#./vmx test.vm.ini
+```
+
 ## How to build?
 Host env: a x86_64 Linux host + gcc 4.8.x
 

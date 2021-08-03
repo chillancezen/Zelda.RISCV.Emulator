@@ -41,6 +41,10 @@ t |    +-----------------------------------------+
 
 ```
 
+- [RISC-V Emulation From Scratch - Part I: Dynamic Instruction Translation](https://chillancezen.github.io/riscv_hypervisor_from_scratch_part1.html)
+- [RISC-V Emulation From Scratch - Part II: Memory Management Unit](https://chillancezen.github.io/riscv_hypervisor_from_scratch_part2.html)
+- [RISC-V Emulation From Scratch - Part III: Privilege Level and Trap handling](https://chillancezen.github.io/riscv_hypervisor_from_scratch_part3.html)
+
 ## Try it out
 I built a binary executable plus bootloader and Linux image. 
 you can download(https://github.com/chillancezen/Zelda.RISCV.Emulator/releases) and decompress it, then run by:

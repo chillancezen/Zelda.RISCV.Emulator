@@ -26,5 +26,21 @@ is_interrupt_deliverable(struct hart * hartptr, uint8_t vector);
 void
 deliver_interrupt(struct hart * hartptr, uint8_t vector);
 
+/*
+ * Advance the guest clock, refresh device state and take any interrupt that
+ * has become deliverable. Does not return if an interrupt is taken.
+ */
+void
+pump_devices_and_deliver_interrupts(struct hart * hartptr);
+
+/*
+ * Idle the hart until something can wake it, used to implement wfi.
+ */
+void
+hart_idle(struct hart * hartptr);
+
+void
+set_ticks_per_translation_unit(uint64_t ticks);
+
 #endif
 

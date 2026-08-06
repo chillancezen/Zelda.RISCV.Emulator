@@ -29,5 +29,5 @@ struct fdt_header {
 #define BIG_ENDIAN32(v) LITTLE_ENDIAN32(v)
 
 void
-validate_dtb(void);
+validate_dtb(uint32_t dtb_address);
 #endif

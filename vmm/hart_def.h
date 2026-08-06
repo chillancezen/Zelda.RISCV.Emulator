@@ -12,13 +12,25 @@
 #endif
 
 
-// XXX: make it big, so it doesn't need to be flushed when debuging the TC
-#define TRANSLATION_CACHE_SIZE (1024 * 64)
-// XXX: make it not that big, because it takes too much to search translated instruction.
-#define MAX_INSTRUCTIONS_TOTRANSLATE 512
+/*
+ * Sizing these two together matters: a translated instruction averages a bit
+ * over a hundred bytes, so the cache should hold roughly that many bytes per
+ * mapping slot. Too small and a kernel's working set does not fit, so the
+ * cache thrashes and every trip round a loop is re-translated.
+ *
+ * The mapping array is kept sorted by insertion, which is linear per entry, so
+ * growing the slot count is not free either.
+ */
+#define TRANSLATION_CACHE_SIZE (1024 * 512)
+#define MAX_INSTRUCTIONS_TOTRANSLATE 4096
 
-// reserve a small trunk of space to transfer control to vmm
-#define VMM_STACK_SIZE (1024 * 8)
+/*
+ * Translated code runs on this stack, and so does every callback it makes
+ * back into the vmm - including the logging and debugger paths, which are the
+ * deepest things here. Sizing it for the fast path alone means a fault report
+ * overflows the stack and turns a clear diagnostic into a bare segfault.
+ */
+#define VMM_STACK_SIZE (1024 * 1024)
 
 // for debug reason, put a magic word in each hart.
 #define HART_MAGIC_WORD 0xdeadbeef

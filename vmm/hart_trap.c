@@ -3,6 +3,7 @@
  */
 #include <hart_trap.h>
 #include <csr.h>
+#include <hart_util.h>
 
 static void
 setup_mmode_trap(struct hart * hartptr, uint32_t cause, uint32_t tval)
@@ -113,6 +114,7 @@ raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
 {
     uint32_t previous_pc = hartptr->pc;
     uint8_t previous_pl = hartptr->privilege_level;
+    uint32_t previous_tag = address_space_tag(hartptr);
     if (target_privilege_level == PRIVILEGE_LEVEL_MACHINE) {
         setup_mmode_trap(hartptr, cause, tval);
     } else {
@@ -124,9 +126,9 @@ raise_trap_raw(struct hart * hartptr, uint8_t target_privilege_level,
               target_privilege_level, cause, tval,
               previous_pc, previous_pl,
               hartptr->pc, hartptr->privilege_level);
-    // XXX: when trap is taken, the addressing manner may chnage, so
-    // the translation cache must be flushed.
-    flush_translation_cache(hartptr);
+    // Taking a trap can change how addresses are translated - machine mode
+    // does not page - so cached translations may no longer apply.
+    flush_translation_cache_on_address_space_change(hartptr, previous_tag);
     do_trap(hartptr);
 }
 

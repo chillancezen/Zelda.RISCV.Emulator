@@ -6,12 +6,12 @@
 #include <printk.h>
 
 void
-validate_dtb(void)
+validate_dtb(uint32_t dtb_address)
 {
-    uint8_t * dtb_base = (uint8_t *)0x1000;
+    uint8_t * dtb_base = (uint8_t *)dtb_address;
     struct fdt_header * fdt = (struct fdt_header *)dtb_base;
     if (fdt->magic == BIG_ENDIAN32(FDT_MAGIC)) {
-        printk("device tree detected at 0x%x\n", 0x1000);
+        printk("device tree detected at 0x%x\n", dtb_address);
         printk("device tree blob size: %d bytes\n", LITTLE_ENDIAN32(fdt->totalsize));
         int dtb_size = LITTLE_ENDIAN32(fdt->totalsize);
         char * index_tbl="0123456789abcdef";

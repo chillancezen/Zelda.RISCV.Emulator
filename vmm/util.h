@@ -80,6 +80,10 @@ sign_extend32(uint32_t data, int sign_bit)
 int
 preload_binary_image(void * addr, int64_t length, const char * image_path);
 
+// Size of an image on disk, or 0 if it cannot be opened.
+int
+image_file_size(const char * image_path);
+
 #define PANIC(hart) {                                                          \
     printf(ANSI_COLOR_RED);                                                    \
     dump_hart(hart);                                                           \

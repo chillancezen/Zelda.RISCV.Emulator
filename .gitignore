@@ -63,3 +63,9 @@ qemu.log
 zelda.dtb
 guest/guest.rv32.img
 vmm/vmx
+
+# guest build products
+guest/Image
+guest/linux-*/
+guest/linux-*.tar.xz
+guest/initramfs/

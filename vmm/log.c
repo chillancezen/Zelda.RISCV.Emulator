@@ -29,13 +29,19 @@
 
 #include "log.h"
 
+/*
+ * The level is initialised statically rather than from a constructor: the csr
+ * and translator tables register themselves from constructors of their own,
+ * and the order constructors run in is not defined, so anything set up that
+ * way can be too late to matter.
+ */
 static struct {
   void *udata;
   log_LockFn lock;
   FILE *fp;
   int level;
   int quiet;
-} L;
+} L = {.level = LOGGING_LEVEL};
 
 
 __attribute__((unused))
@@ -106,8 +112,3 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 
 }
 
-__attribute__((constructor)) static void
-logging_init(void)
-{
-    log_set_level(LOGGING_LEVEL);
-}

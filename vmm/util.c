@@ -6,6 +6,19 @@
 #include <unistd.h>
 
 int
+image_file_size(const char * image_path)
+{
+    int fd = open(image_path, O_RDONLY);
+    int length;
+    if (fd < 0) {
+        return 0;
+    }
+    length = lseek(fd, 0, SEEK_END);
+    close(fd);
+    return length;
+}
+
+int
 preload_binary_image(void * addr, int64_t length, const char * image_path)
 {
     int fd = open(image_path, O_RDONLY);

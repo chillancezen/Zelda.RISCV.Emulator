@@ -9,6 +9,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vm.h>
+#include <clint.h>
+#include <plic.h>
+#include <uart.h>
+#include <syscon.h>
+#include <zelda_boot_info.h>
 
 void
 fdt_build_init(struct fdt_build_blob * blob, int buffer_size,
@@ -215,9 +220,11 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
     fdt_begin_node(blob, "cpus");
     uint32_t address_cells = BIG_ENDIAN32(1);
     uint32_t size_cells = 0;
-    uint32_t timebase_frequency = BIG_ENDIAN32(0x989680);
+    // Must agree with the clock the CLINT counts in, or every timer the guest
+    // programs will be off by the ratio between the two.
+    uint32_t timebase_frequency = BIG_ENDIAN32(CLINT_TIMEBASE_FREQUENCY);
     fdt_prop(blob, "#address-cells", 4, &address_cells);
-    fdt_prop(blob, "#size_cells", 4, &size_cells);
+    fdt_prop(blob, "#size-cells", 4, &size_cells);
     fdt_prop(blob, "timebase-frequency", 4, &timebase_frequency);
     fdt_begin_node(blob, "cpu-map");
     fdt_begin_node(blob, "cluster0");
@@ -265,8 +272,6 @@ build_cpu_fdt_node(struct fdt_build_blob * blob)
 static void
 build_soc_fdt_node(struct fdt_build_blob * blob)
 {
-    struct virtual_machine * vm =
-        CONTAINER_OF(blob, struct virtual_machine, fdt);
     fdt_begin_node(blob, "soc");
     uint32_t address_cells = BIG_ENDIAN32(2);
     uint32_t size_cells = BIG_ENDIAN32(2);
@@ -274,52 +279,15 @@ build_soc_fdt_node(struct fdt_build_blob * blob)
     fdt_prop(blob, "#size-cells", 4, &size_cells);
     fdt_prop(blob, "compatible", strlen("simple-bus") + 1, "simple-bus");
     fdt_prop(blob, "ranges", 0, NULL);
-    
-    // define Core Local Interrupt Controller CLINT which generates and delivers
-    // machine timer interrupt and supervisor timer interrupt
-    // interrupt 0x3 and 0x7.
-    const char * clint_base_string = ini_get(vm->ini_config, "cpu", "clint_base");
-    const char * clint_size_string = ini_get(vm->ini_config, "cpu", "clint_size");
-    ASSERT(clint_base_string);
-    ASSERT(clint_size_string);
-    uint32_t clint_base = strtol(clint_base_string, NULL, 16);
-    uint32_t clint_size = strtol(clint_size_string, NULL, 16);
-    char name[64];
-    sprintf(name, "clint@%x", clint_base);
-    fdt_begin_node(blob, name);
-    uint32_t regs[4] = {
-        0x0, BIG_ENDIAN32(clint_base),
-        0x0, BIG_ENDIAN32(clint_size)
-    };
-    fdt_prop(blob, "reg", 16, regs);
-    fdt_prop(blob, "compatible", strlen("riscv,clint0") + 1, "riscv,clint0");
-    uint32_t interrupt_extended[4 * MAX_NR_HARTS];
-    int idx = 0;
-    for (; idx < vm->nr_harts; idx++) {
-        interrupt_extended[idx * 4 + 0] =
-            BIG_ENDIAN32(blob->hart_interrupt_controllers_phandles[idx]);
-        interrupt_extended[idx * 4 + 1] = BIG_ENDIAN32(0x3);
-        interrupt_extended[idx * 4 + 2] =
-            BIG_ENDIAN32(blob->hart_interrupt_controllers_phandles[idx]);
-        interrupt_extended[idx * 4 + 1] = BIG_ENDIAN32(0x7);
-    }
-    fdt_prop(blob, "interrupts-extended", 16 * vm->nr_harts, interrupt_extended);
-    fdt_end_node(blob);
-    fdt_end_node(blob);
-}
 
-#include <fcntl.h>
-#include <unistd.h>
-static int
-initramdisk_size(const char * initrd_path)
-{
-    int fd = open(initrd_path, O_RDONLY);
-    if (fd < 0) {
-        return 0;
-    }
-    int image_length = lseek(fd, 0, SEEK_END);
-    close(fd);
-    return image_length;
+    // The core local interruptor drives each hart's machine software (3) and
+    // machine timer (7) interrupts; the platform level controller drives the
+    // machine (11) and supervisor (9) external interrupts.
+    build_clint_fdt_node(blob);
+    build_plic_fdt_node(blob);
+    build_syscon_fdt_node(blob);
+
+    fdt_end_node(blob);
 }
 
 static void
@@ -336,7 +304,7 @@ build_chosen_fdt_node(struct fdt_build_blob * blob)
             ini_get(vm->ini_config, "image", "initrd_load_base");
         if (initrd_path && initrd_load_base_string) {
             uint32_t initrd_start = strtol(initrd_load_base_string, NULL, 16);
-            uint32_t initrd_end = initrd_start + initramdisk_size(initrd_path);
+            uint32_t initrd_end = initrd_start + image_file_size(initrd_path);
             initrd_start = BIG_ENDIAN32(initrd_start);
             initrd_end = BIG_ENDIAN32(initrd_end);
             fdt_prop(blob, "linux,initrd-end", 4, &initrd_end);
@@ -353,7 +321,10 @@ build_chosen_fdt_node(struct fdt_build_blob * blob)
 void
 fdt_init(struct fdt_build_blob * blob)
 {
-    fdt_build_init(blob, 4096, 512);
+    fdt_build_init(blob, 8192, 1024);
+    // Device nodes emitted below name the interrupt controller as their
+    // parent, so its phandle has to exist before any of them are written.
+    plic_reserve_phandle(blob);
     fdt_begin_node(blob, ""); // the root node
     uint32_t address_cells = BIG_ENDIAN32(2);
     uint32_t size_cells = BIG_ENDIAN32(2);
@@ -379,9 +350,12 @@ fdt_init(struct fdt_build_blob * blob)
         dump_device_tree_to_file(blob, dump_dtb);
     }
     
-    // Load the dtb into the very beginning of rom
-    ASSERT(blob->buffer_iptr < (4096 * 3));
-    ASSERT(memcpy(vm->bootrom_host_base, blob->buffer, blob->buffer_iptr));
+    // Park the dtb in the rom slot the firmware and the guest both expect.
+    ASSERT(blob->buffer_iptr <= ZELDA_DTB_MAX_SIZE);
+    ASSERT(vm->bootrom_base == ZELDA_ROM_BASE &&
+           vm->bootrom_size >= ZELDA_ROM_MIN_SIZE);
+    memcpy(vm->bootrom_host_base + ZELDA_DTB_ADDRESS - vm->bootrom_base,
+           blob->buffer, blob->buffer_iptr);
 }
 
 void
@@ -392,7 +366,7 @@ scan_fdt_tokens(uint8_t * dtb, int size)
     uint8_t * ptr = fdt_struct_base;
     char * node_name = NULL;
     char * node_prop_name = NULL;
-    int node_prop_length = NULL;
+    int node_prop_length = 0;
     void * node_prop_value = NULL;
     int to_stop = 0;
     while(!to_stop) {

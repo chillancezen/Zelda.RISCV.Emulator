@@ -45,197 +45,120 @@ t |    +-----------------------------------------+
 - [RISC-V Emulation From Scratch - Part II: Memory Management Unit](https://chillancezen.github.io/riscv_hypervisor_from_scratch_part2.html)
 - [RISC-V Emulation From Scratch - Part III: Privilege Level and Trap handling](https://chillancezen.github.io/riscv_hypervisor_from_scratch_part3.html)
 
-## Try it out
-I built a binary executable plus bootloader and Linux image. 
-you can download(https://github.com/chillancezen/Zelda.RISCV.Emulator/releases) and decompress it, then run by:
-```
-#./vmx test.vm.ini
-```
+## The emulated platform
+
+The vmm presents a single-hart rv32ima machine with these devices:
+
+| Address     | Size  | Device                                                  |
+|-------------|-------|---------------------------------------------------------|
+| `0x00000000`| 4 MiB | boot rom: device tree, boot info block, machine mode firmware |
+| `0x00400000`| 4 KiB | `sifive,test0` finisher, used to power the machine off  |
+| `0x02000000`| 64 KiB| `riscv,clint0`: `mtime`, `mtimecmp`, `msip`             |
+| `0x0c000000`| 64 MiB| `riscv,plic0`: routes device interrupts to the harts    |
+| `0x10000000`| 256 B | `ns16550a` uart, wired to PLIC source 10                |
+| `0x80000000`| ram   | main memory; the kernel is loaded at `0x80400000`       |
+
+The boot rom holds a machine mode firmware that provides SBI itself, so no
+separate bootloader is needed. It handles ecalls from the supervisor,
+implements SBI v0.3 (`base`, `time`, `ipi`, `rfence`, `srst`) alongside the
+v0.1 legacy calls, and converts the machine timer interrupt it owns into the
+supervisor timer interrupt the kernel waits on.
+
+The guest clock is virtual: it advances with the amount of guest code
+executed rather than with host wall time. Tying it to the host would give the
+guest a machine that runs a handful of instructions per timer tick, and the
+kernel would spend its whole life inside the timer handler. `[cpu]
+ticks_per_translation_unit` in the config file sets the exchange rate.
 
 ## How to build?
-Host env: a x86_64 Linux host + gcc 4.8.x
 
-there are lots of things to build in order to run a riscv Linux. here is the guide page: https://risc-v-getting-started-guide.readthedocs.io/en/latest/linux-qemu.html
-- riscv32 cross-compile toolchain: `riscv32-unknown-linux-gnu-` 
-- riscv-Linux, make sure a newer Linux kernel source is built from, Linux 5.4.0 is chosen in my testbed.
-- SBI software: Berkely Bootloader(aka. BBL) is my choice.
-- initramfs cpio built with busybox.
-- build the emulator by simplily running `CC=gcc-4.8 make`
+Host env: a x86_64 Linux host with gcc, plus a riscv cross compiler for the
+firmware. On Debian or Ubuntu:
+
+```
+# apt install gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
+```
+
+A riscv64 cross compiler targets rv32 fine; if you have a native rv32
+toolchain, point `CROSS_COMPILE` at it instead. Then:
+
+```
+$ make            # the emulator and its machine mode firmware, a few seconds
+$ make guest      # downloads and builds an rv32 Linux, several minutes
+```
+
+`make guest` fetches a kernel tarball, configures it for this platform
+(`guest/zelda.config`), builds a small freestanding init into an initramfs,
+and leaves the result at `guest/Image`. The config keeps the guest inside the
+instruction set the emulator implements: plain rv32ima, with the compressed
+and floating point extensions turned off.
+
 ## How to run ?
 Now you should be able to find an executable:`vmx` under directory vmm. that's the virtual machine monitor.
 in order to run a guest, we have to define a configuration file to instruct vmm how to load and run a guest. 
 
-A typical config file is given in  **test.vm.ini**
- ```ini
+The machine is described by a config file; **test.vm.ini** is a working one
+and documents every key it accepts. The settings worth knowing about:
 
-[image]
-name = test.guest
-; The BBL+Linux path
-kernel = /root/workspace/riscv-pk-master/build/bbl.img
+| Key | Meaning |
+|-----|---------|
+| `image.kernel` | raw rv32 Linux image, loaded verbatim |
+| `image.kernel_load_base` | where it goes, and where the firmware enters it; must be 4 MiB aligned |
+| `image.bootarg` | kernel command line |
+| `image.initrd` | optional external ramdisk; unnecessary when the kernel carries its own initramfs |
+| `rom.rom_start` / `rom.rom_size` | must be `0x0` and at least 4 MiB, see the layout note in the file |
+| `cpu.ticks_per_translation_unit` | how fast the guest clock runs relative to guest progress |
+| `mem.main_memory_*` | size and placement of ram |
+| `debug.verbosity` | 0 is a full instruction trace, 4 shows only errors |
 
-; our ram starts at 0x80000000, so we load the kernel image right here.
-kernel_load_base = 0x80000000
-
-; the boot argument delivered to Linux kernel
-; earlycon or console must be specified here
-bootarg = console=uart8250,mmio,0x10000000
-
-; init ramdisk arguments.
-initrd = /root/workspace/busybox-1.31.1/initrd.cpio
-initrd_load_base = 0x84000000
-
-[rom]
-rom_image = bootrom/bootrom.rv32.img
-rom_start = 0x1000
-rom_size = 0x1000000
-
-
-[cpu]
-; number of cpus, always required.
-nr_cpus = 1
-; the cpu index as the primary cpu to boot: optional, default:0
-boot_cpu = 0
-; the program counter will be set to the value when the hart is reset or poweron
-; also the rom image will be loaded to the address
-pc_on_reset = 0x4000
-; the Core Local Interrupt Controller which generates and delivers machine
-; and supervisor timer interrupts to HLIC
-clint_base = 0x02000000
-clint_size = 0x00010000
-; the capacity of TLB, MUST BE POWER OF 2, and 16K is quite enough.
-itlb_size = 0x4000
-dtlb_size = 0x4000
-
-[mem]
-main_memory_start = 0x80000000
-main_memory_size_in_mega = 1024
-
-[misc]
-; dump the device tree blob, optional
-dump_dtb = ./zelda.dtb
-
-[debug]
-; the log verbosity is an integer.
-;LOG_TRACE = 0, LOG_DEBUG = 1, LOG_INFO = 2, LOG_WARN = 3, LOG_ERROR = 4,
-;LOG_FATAL = 5, LOG_UART = 6
-verbosity = 2
-; initial breakpoints, optional.
-;breakpoints = c011de8c
- ```
 then run the virtual machine:
 ```
-$./vmm/vmx ./test.vm.ini
+$ ./vmm/vmx test.vm.ini
 
-[UART16550] bbl loader
-[UART16550]               vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550]                   vvvvvvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rr                vvvvvvvvvvvvvvvvvvvvvv
-[UART16550] rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
-[UART16550] rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
-[UART16550] rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
-[UART16550] rrrrrrrr      vvvvvvvvvvvvvvvvvv      rrrrrrrr
-[UART16550] rrrrrrrrrr      vvvvvvvvvvvvvv      rrrrrrrrrr
-[UART16550] rrrrrrrrrrrr      vvvvvvvvvv      rrrrrrrrrrrr
-[UART16550] rrrrrrrrrrrrrr      vvvvvv      rrrrrrrrrrrrrr
-[UART16550] rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
-[UART16550] rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
-[UART16550] rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
-[UART16550] rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
-[UART16550]
-[UART16550]        INSTRUCTION SETS WANT TO BE FREE
-[UART16550] [    0.000000] OF: fdt: Ignoring memory range 0x80000000 - 0x80400000
-[UART16550] [    0.000000] Linux version 5.4.0 (root@my-container-host) (gcc version 9.2.0 (GCC)) #49 SMP Thu Feb 20 00:06:15 EST 2020
-[UART16550] [    0.000000] earlycon: uart8250 at MMIO 0x0000000010000000 (options '')
-[UART16550] [    0.000000] printk: bootconsole [uart8250] enabled
-[UART16550] [    0.000000] initrd not found or empty - disabling initrd
-[UART16550] [    0.000000] Zone ranges:
-[UART16550] [    0.000000]   Normal   [mem 0x0000000080400000-0x00000000bfffffff]
-[UART16550] [    0.000000] Movable zone start for each node
-[UART16550] [    0.000000] Early memory node ranges
-[UART16550] [    0.000000]   node   0: [mem 0x0000000080400000-0x00000000bfffffff]
-[UART16550] [    0.000000] Initmem setup node 0 [mem 0x0000000080400000-0x00000000bfffffff]
-[UART16550] [    0.000000] elf_hwcap is 0x1101
-[UART16550] [    0.000000] percpu: Embedded 12 pages/cpu s18572 r8192 d22388 u49152
-[UART16550] [    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 258570
-[UART16550] [    0.000000] Kernel command line: console=uart8250,mmio,0x10000000
-[UART16550] [    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes, linear)
-[UART16550] [    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
-[UART16550] [    0.000000] Sorting __ex_table...
-[UART16550] [    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
-[UART16550] [    0.000000] Memory: 1027168K/1044480K available (4827K kernel code, 167K rwdata, 869K rodata, 194K init, 215K bss, 17312K reserved, 0K cma-reserved)
-[UART16550] [    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
-[UART16550] [    0.000000] rcu: Hierarchical RCU implementation.
-[UART16550] [    0.000000] rcu:     RCU event tracing is enabled.
-[UART16550] [    0.000000] rcu:     RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=1.
-[UART16550] [    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
-[UART16550] [    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
-[UART16550] [    0.000000] NR_IRQS: 0, nr_irqs: 0, preallocated irqs: 0
-[UART16550] [    0.000000] riscv_timer_init_dt: Registering clocksource cpuid [0] hartid [0]
-[UART16550] [    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710, max_idle_ns: 440795202120 ns
-[UART16550] [    0.422538] sched_clock: 64 bits at 10MHz, resolution 100ns, wraps every 4398046511100ns
-[UART16550] [    4.252737] Console: colour dummy device 80x25
-[UART16550] [    6.235356] Calibrating delay loop (skipped), value calculated using timer frequency.. 20.00 BogoMIPS (lpj=40000)
-[UART16550] [    8.003012] pid_max: default: 32768 minimum: 301
-[UART16550] [   20.840875] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
-[UART16550] [   22.340268] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
-[UART16550] [  122.987299] rcu: Hierarchical SRCU implementation.
-[UART16550] [  145.745366] smp: Bringing up secondary CPUs ...
-[UART16550] [  146.636491] smp: Brought up 1 node, 1 CPU
-[UART16550] [  167.172520] devtmpfs: initialized
-[UART16550] [  225.544304] random: get_random_u32 called from bucket_table_alloc.isra.0+0x74/0x1e8 with crng_init=0
-[UART16550] [  244.717649] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
-[UART16550] [  246.249764] futex hash table entries: 256 (order: 2, 16384 bytes, linear)
-[UART16550] [  264.165035] NET: Registered protocol family 16
-[UART16550] [  757.462322] vgaarb: loaded
-[UART16550] [  805.868283] clocksource: Switched to clocksource riscv_clocksource
-[UART16550] [ 1383.052807] NET: Registered protocol family 2
-[UART16550] [ 1401.327814] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 6144 bytes, linear)
-[UART16550] [ 1402.666607] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)
-[UART16550] [ 1404.833819] TCP bind hash table entries: 8192 (order: 4, 65536 bytes, linear)
-[UART16550] [ 1407.025060] TCP: Hash tables configured (established 8192 bind 8192)
-[UART16550] [ 1411.010948] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
-[UART16550] [ 1413.035057] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
-[UART16550] [ 1422.205886] NET: Registered protocol family 1
-[UART16550] [ 1425.305232] PCI: CLS 0 bytes, default 64
-[UART16550] [ 1482.448305] workingset: timestamp_bits=30 max_order=18 bucket_order=0
-[UART16550] [ 2485.278226] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
-[UART16550] [ 2486.281572] io scheduler mq-deadline registered
-[UART16550] [ 2487.188251] io scheduler kyber registered
-[UART16550] [ 6241.054490] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-[UART16550] [ 6330.096069] 10000000.uart: ttyS0 at MMIO 0x10000000 (irq = 0, base_baud = 230400) is a 16550A
-[UART16550] [ 6332.383725] printk: console [ttyS0] enabled
-[UART16550] [ 6332.383725] printk: console [ttyS0] enabled
-[UART16550] [ 6333.331288] printk: bootconsole [uart8250] disabled
-[UART16550] [ 6333.331288] printk: bootconsole [uart8250] disabled
-[UART16550] [ 6735.440324] loop: module loaded
-[UART16550] [ 6836.199201] NET: Registered protocol family 10
-[UART16550] [ 6869.120954] Segment Routing with IPv6
-[UART16550] [ 6872.019522] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
-[UART16550] [ 6913.590145] NET: Registered protocol family 17
-[UART16550] [ 6941.977875] VFS: Cannot open root device "(null)" or unknown-block(0,0): error -6
-[UART16550] [ 6942.668342] Please append a correct "root=" boot option; here are the available partitions:
-[UART16550] [ 6943.892260] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
-[UART16550] [ 6945.071321] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.4.0 #49
-[UART16550] [ 6945.891648] Call Trace:
-[UART16550] [ 6947.070050] [<c0033178>] walk_stackframe+0x0/0x108
-[UART16550] [ 6948.207483] [<c00333b8>] show_stack+0x3c/0x50
-[UART16550] [ 6949.439245] [<c04c42cc>] dump_stack+0x88/0xb4
-[UART16550] [ 6950.699945] [<c00399e8>] panic+0x11c/0x2bc
-[UART16550] [ 6951.984874] [<c0001430>] mount_block_root+0x270/0x330
-[UART16550] [ 6954.095673] [<c0001584>] mount_root+0x94/0xac
-[UART16550] [ 6955.203056] [<c00016ec>] prepare_namespace+0x150/0x1ac
-[UART16550] [ 6956.397539] [<c0000f8c>] kernel_init_freeable+0x1dc/0x214
-[UART16550] [ 6957.571689] [<c04e04b0>] kernel_init+0x1c/0x11c
-[UART16550] [ 6958.882195] [<c0031dd0>] ret_from_exception+0x0/0x10
-[UART16550] [ 6959.950079] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0) ]---
+zelda machine mode firmware
+  platform    : rv32ima, 1 hart(s)
+  memory      : 0x80000000 + 256 MiB
+  device tree : 0x1000
+  kernel      : 0x80400000
+  sbi         : v0.3, extensions base/time/ipi/rfence/srst
+
+device tree detected at 0x1000
+device tree blob size: 2074 bytes
+device tree blob sha1 checksum: 459a24ccd5e60cfb27e6d44e6dfd9e9d4c74d670
+[firmware] entering supervisor at 0x80400000
+
+[    0.000000] Linux version 6.1.75 (riscv64-linux-gnu-gcc 11.4.0) #3 SMP
+[    0.000000] earlycon: uart8250 at MMIO 0x0000000010000000 (options '')
+[    0.000000] printk: bootconsole [uart8250] enabled
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080400000-0x000000008fffffff]
+[    0.000000] riscv: base ISA extensions aim
+[    0.000000] riscv: ELF capabilities aim
+[    0.000000] Kernel command line: console=ttyS0 earlycon=uart8250,mmio,0x10000000
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] riscv-plic: plic@c000000: mapped 31 interrupts with 1 handlers for 2 contexts.
+[    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710
+[    0.842022] devtmpfs: initialized
+[    1.666476] printk: console [ttyS0] enabled
+[    2.343110] Freeing unused kernel image (initmem) memory: 4140K
+[    2.343802] Run /init as init process
+
+  Zelda RISC-V emulator -- rv32ima Linux userspace is alive.
+  Type 'help' for the builtins, 'poweroff' to stop the machine.
+
+zelda:/# uname
+Linux 6.1.75 riscv32
+zelda:/# poweroff
+powering off
+[   72.784343] reboot: Power down
+zelda: system halted
 ```
+
+The console is the terminal the emulator was started from, put into raw mode,
+so the guest receives keystrokes directly. Press `ctrl-a` then `x` to stop the
+emulator from outside the guest.
+
 ## How to debug?
 The vmm provides a builtin debugger to assist troubleshooting. which is pretty enough for me to find what's going on with my guest. of course you also need the binutils. 
 
@@ -451,10 +374,18 @@ if you specify the option to dump the device tree. you are allowed to inspect wh
 ```
 
 ## CORE FEATURE
-- [X] RV32IAM 
+- [X] RV32IMA
 - [X] SV32 SoftMMU
-- [X] Boot Berkely Bootloader + Linux (WIP)
+- [X] Machine mode SBI firmware in the boot rom, so no external bootloader
+- [X] CLINT, PLIC and a 16550 console with working input
+- [X] Interrupt delivery and `wfi`
+- [X] Boots Linux to an interactive userspace shell
 - [X] native debuger(live breakpoints)
+
+Not implemented: multiple harts run concurrently (the vmm executes one hart),
+the compressed and floating point extensions, and any block or network device.
+The page walker does not enforce the U, R, W and X permission bits or update
+the accessed and dirty bits.
 
 ## Demo
 [![asciicast](https://asciinema.org/a/lALhpxEOtLeGzPvnoyTA3AMjH.svg)](https://asciinema.org/a/lALhpxEOtLeGzPvnoyTA3AMjH)

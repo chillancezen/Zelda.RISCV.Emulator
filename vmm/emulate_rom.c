@@ -13,6 +13,15 @@ bootrom_read(uint64_t addr, int access_size, struct hart * hartptr,
     uint64_t val = 0;
     struct virtual_machine * vm = hartptr->vmptr;
     void * memory_access_base = vm->bootrom_host_base + (addr - pmr->addr_low);
+    /*
+     * A guest can point a large page at the tail of this region and address
+     * past its end. Refuse rather than read off the end of the allocation.
+     */
+    if (addr + access_size > pmr->addr_high) {
+        log_warn("bootrom: read of %d bytes at 0x%x is out of range\n",
+                 access_size, (uint32_t)addr);
+        return 0;
+    }
     switch (access_size)
     {
 #define _(size, type)                                                          \
@@ -39,6 +48,11 @@ bootrom_write(uint64_t addr, int access_size, uint64_t value,
 {
     struct virtual_machine * vm = hartptr->vmptr;
     void * memory_access_base = vm->bootrom_host_base + (addr - pmr->addr_low);
+    if (addr + access_size > pmr->addr_high) {
+        log_warn("bootrom: write of %d bytes at 0x%x is out of range\n",
+                 access_size, (uint32_t)addr);
+        return;
+    }
     switch (access_size)
     {
 #define _(size, type)                                                          \

@@ -7,6 +7,7 @@
 #include <mmu.h>
 #include <string.h>
 #include <util.h>
+#include <hart_interrupt.h>
 
 
 static instruction_translator translators[128];
@@ -263,14 +264,11 @@ int counter = 0;
 void
 vmexit(struct hart * hartptr)
 {
-    uint64_t rsp;
-
-    __asm__ volatile("movq %%rsp, %%rax;"
-                     :"=a"(rsp)
-                     :
-                     :"memory");
-    //printf("val = 0x%llx   %d\n", (long long unsigned int)rsp, counter++);
-    //dump_hart(hartptr);
+    // A translation unit has just finished, which is the one moment the vmm
+    // holds control with the guest sitting on an instruction boundary. Give
+    // the devices a chance to run and take any interrupt that is now due.
+    // This does not return if an interrupt is delivered.
+    pump_devices_and_deliver_interrupts(hartptr);
     vmresume(hartptr);
 }
 

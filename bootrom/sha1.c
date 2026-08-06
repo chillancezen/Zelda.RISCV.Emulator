@@ -17,8 +17,10 @@ A million repetitions of "a"
 
 #define SHA1HANDSOFF
 #include <stdint.h>
-#include <stdio.h>
-//#include <string.h>
+/*
+ * Freestanding: this file brings its own memcpy and memset below, and there
+ * is no rv32 libc to include headers from.
+ */
 static inline void
 memcpy(void * dst, const void *src, int size)
 {

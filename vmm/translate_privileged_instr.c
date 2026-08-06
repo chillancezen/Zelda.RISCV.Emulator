@@ -49,13 +49,14 @@ riscv_ebreak_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 mret_callback(struct hart * hartptr)
 {
+    uint32_t previous_tag;
     assert_hart_running_in_mmode(hartptr);
+    previous_tag = address_space_tag(hartptr);
     adjust_mstatus_upon_mret(hartptr);
     adjust_pc_upon_mret(hartptr);
-    // translation cache must be flushed, because adjusted privilege level may
-    // diff in addressing space
-    flush_translation_cache(hartptr);
-    
+    // Returning to a less privileged level can turn paging back on, which
+    // invalidates translations made against the direct mapping.
+    flush_translation_cache_on_address_space_change(hartptr, previous_tag);
 }
 
 static void
@@ -89,11 +90,12 @@ riscv_mret_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 sret_callback(struct hart * hartptr)
 {
+    uint32_t previous_tag;
     assert_hart_running_in_smode(hartptr);
+    previous_tag = address_space_tag(hartptr);
     adjust_mstatus_upon_sret(hartptr);
     adjust_pc_upon_sret(hartptr);
-    flush_translation_cache(hartptr);
-
+    flush_translation_cache_on_address_space_change(hartptr, previous_tag);
 }
 
 static void
@@ -220,12 +222,11 @@ riscv_ecall_translator(struct decoding * dec, struct prefetch_blob * blob,
 __attribute__((unused)) static void
 wfi_callback(struct hart * hartptr)
 {
-    //hartptr->pc += 4;
-    // VMM YIELDS CPU until next interrupt comes
-    //ASSERT(is_interrupt_deliverable(hartptr, INTERRUPT_SUPERVISOR_TIMER));
-    //deliver_interrupt(hartptr, INTERRUPT_MACHINE_TIMER);
-    //dump_hart(hartptr);
-    __not_reach();
+    // wfi is a hint: it is always architecturally legal to fall straight
+    // through. Idling here rather than returning immediately keeps an idle
+    // guest from burning host cycles re-executing its idle loop, and lets the
+    // virtual clock jump to the next armed timer.
+    hart_idle(hartptr);
 }
 static void
 riscv_wfi_translator(struct decoding * dec, struct prefetch_blob * blob,

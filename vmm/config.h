@@ -24,7 +24,10 @@
 /*
  * initial logging level
  * LOG_TRACE, LOG_DEBUG, LOG_INFO,LOG_WARN, LOG_ERROR, LOG_FATAL, LOG_UART
- * it may be overriden by per-vm debug.verbosity
+ *
+ * This governs the window before the config file is read: the csr and
+ * translator tables register themselves from constructors, which run before
+ * main. debug.verbosity in the vm config takes over from there.
  */
-#define LOGGING_LEVEL LOG_TRACE
+#define LOGGING_LEVEL LOG_WARN
 #endif

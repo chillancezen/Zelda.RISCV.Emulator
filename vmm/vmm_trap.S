@@ -14,6 +14,15 @@ vmm_entry_point:
     movq (%rdx), %rdx
     movq %rdx, %rsp
 
+    /*
+     * The stack pointer we just installed is 16 byte aligned, but the ABI
+     * wants rsp % 16 == 8 on entry to a function, which is what a call from
+     * an aligned stack leaves behind. Without this pad every callee that
+     * touches an aligned SSE register - anything reaching printf, for one -
+     * faults on its first movaps.
+     */
+    subq $8, %rsp
+
     .extern vmexit
     pushq %r12
     movq %r12, %rdi

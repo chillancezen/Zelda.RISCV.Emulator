@@ -11,6 +11,42 @@
 #include <csr.h>
 #include <hart_exception.h>
 
+/*
+ * Identifies the address space instructions are currently fetched through.
+ * Translations are cached by guest virtual address alone, so they stay valid
+ * exactly as long as this does not change.
+ *
+ * Machine mode and supervisor mode with paging disabled both address memory
+ * directly, and share the tag zero; a satp with its mode bit set is never
+ * zero, so the two cannot collide.
+ */
+static inline uint32_t
+address_space_tag(struct hart * hartptr)
+{
+    struct csr_entry * satp =
+        &((struct csr_entry *)hartptr->csrs_base)[CSR_ADDRESS_SATP];
+    if (hartptr->privilege_level == PRIVILEGE_LEVEL_MACHINE ||
+        !(satp->csr_blob & 0x80000000)) {
+        return 0;
+    }
+    return satp->csr_blob;
+}
+
+/*
+ * Discard translations only if the address space they were made against is no
+ * longer the one in effect. Flushing unconditionally on every trap is correct
+ * but ruinous: a timer interrupt handled entirely within one address space
+ * would throw away the whole cache a hundred times a second.
+ */
+static inline void
+flush_translation_cache_on_address_space_change(struct hart * hartptr,
+                                                uint32_t previous_tag)
+{
+    if (address_space_tag(hartptr) != previous_tag) {
+        flush_translation_cache(hartptr);
+    }
+}
+
 static inline uint32_t
 get_hart_mepc(struct hart * hartptr)
 {

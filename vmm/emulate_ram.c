@@ -96,8 +96,15 @@ ram_init(struct virtual_machine * vm)
     ASSERT(image_path);
     ASSERT(load_base_string);
     uint32_t load_base = strtol(load_base_string, NULL, 16);
-    ASSERT(!preload_binary_image(vm->main_mem_host_base + load_base - vm->main_mem_base,
-                                 vm->main_mem_size, image_path));
+    ASSERT(load_base >= vm->main_mem_base &&
+           load_base < vm->main_mem_base + vm->main_mem_size);
+    if (preload_binary_image(vm->main_mem_host_base + load_base - vm->main_mem_base,
+                             vm->main_mem_size - (load_base - vm->main_mem_base),
+                             image_path)) {
+        log_fatal("cannot load kernel image '%s' at 0x%x\n", image_path,
+                  load_base);
+        exit(1);
+    }
 
     // Load the init ramdisk
     const char * initrd_path = ini_get(vm->ini_config, "image", "initrd");

@@ -1,0 +1,18 @@
+# Contents of the built-in initramfs, in the format usr/gen_init_cpio reads.
+#
+# A directory would be simpler, but the kernel opens /dev/console to give init
+# its standard input and output, and that device node has to exist before
+# devtmpfs is mounted - which init itself cannot do until it has a console.
+# Describing the archive in a list lets the device nodes be created without
+# needing root on the build host.
+#
+# Paths on the right are relative to the kernel build directory.
+
+dir  /dev            0755 0 0
+nod  /dev/console    0600 0 0 c 5 1
+nod  /dev/null       0666 0 0 c 1 3
+nod  /dev/tty        0666 0 0 c 5 0
+dir  /proc           0755 0 0
+dir  /sys            0755 0 0
+dir  /tmp            0777 0 0
+file /init           ../initramfs/init 0755 0 0

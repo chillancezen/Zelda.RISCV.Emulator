@@ -11,12 +11,20 @@
 #include <unistd.h>
 #include <debug.h>
 #include <mmu_tlb.h>
+#include <clint.h>
+#include <plic.h>
+#include <uart.h>
+#include <syscon.h>
+#include <hart_interrupt.h>
+#include <zelda_boot_info.h>
 
 static void
 device_init(struct virtual_machine * vm)
 {
     clint_init(vm);
+    plic_init(vm);
     uart_init();
+    syscon_init(vm);
 }
 
 static void
@@ -71,6 +79,14 @@ cpu_init(struct virtual_machine * vm)
 static void
 misc_init(struct virtual_machine * vm)
 {
+    // How fast the guest's virtual clock runs relative to the work it gets
+    // done. See hart_interrupt.c for what the number means.
+    const char * ticks_string =
+        ini_get(vm->ini_config, "cpu", "ticks_per_translation_unit");
+    if (ticks_string) {
+        set_ticks_per_translation_unit(strtol(ticks_string, NULL, 10));
+    }
+
     // Load breakpoints if there is any.
     char * breakpoints = (char *)ini_get(vm->ini_config, "debug", "breakpoints");
     char delimiter[] = " ";
@@ -80,6 +96,43 @@ misc_init(struct virtual_machine * vm)
             add_breakpoint(strtol(bp, NULL, 16));
             bp = strtok(NULL, delimiter);
         }
+    }
+}
+
+/*
+ * Leave the firmware the handful of addresses it cannot discover for itself:
+ * where the kernel was loaded, where the device tree is, and how big memory
+ * is. The firmware runs before it can parse anything, so this is deposited at
+ * a fixed rom address both sides agree on.
+ */
+static void
+boot_info_init(struct virtual_machine * vm)
+{
+    struct zelda_boot_info * info;
+    const char * kernel_entry_string =
+        ini_get(vm->ini_config, "image", "kernel_load_base");
+    const char * initrd_path = ini_get(vm->ini_config, "image", "initrd");
+    const char * initrd_base_string =
+        ini_get(vm->ini_config, "image", "initrd_load_base");
+
+    ASSERT(kernel_entry_string);
+    ASSERT(ZELDA_BOOT_INFO_ADDRESS >= vm->bootrom_base &&
+           ZELDA_BOOT_INFO_ADDRESS + sizeof(struct zelda_boot_info) <
+           vm->bootrom_base + vm->bootrom_size);
+
+    info = (struct zelda_boot_info *)(vm->bootrom_host_base +
+                                      ZELDA_BOOT_INFO_ADDRESS -
+                                      vm->bootrom_base);
+    memset(info, 0x0, sizeof(struct zelda_boot_info));
+    info->magic = ZELDA_BOOT_INFO_MAGIC;
+    info->kernel_entry = strtol(kernel_entry_string, NULL, 16);
+    info->dtb_address = ZELDA_DTB_ADDRESS;
+    info->memory_start = vm->main_mem_base;
+    info->memory_size = vm->main_mem_size;
+    info->nr_harts = vm->nr_harts;
+    if (initrd_path && initrd_base_string) {
+        info->initrd_start = strtol(initrd_base_string, NULL, 16);
+        info->initrd_end = info->initrd_start + image_file_size(initrd_path);
     }
 }
 
@@ -96,6 +149,7 @@ virtual_machine_init(struct virtual_machine * vm, ini_t * ini)
     device_init(vm);
     misc_init(vm);
     fdt_init(&vm->fdt);
+    boot_info_init(vm);
 
     dump_memory_regions();
 }
